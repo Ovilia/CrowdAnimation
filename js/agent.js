@@ -1,0 +1,7 @@
+function Agent() {
+    
+}
+
+Agent.prototype = {
+    
+};
