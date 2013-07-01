@@ -6,11 +6,18 @@ var gb = {
     renderer: null,
     camera: null,
     scene: null,
+    projector: null,
     
     lookAt: new THREE.Vector3(0, 0, 0),
     
     mouse: {
         isPressed: false,
+        state: 0,
+        STATE: {
+            NONE: 0,
+            ADD_SHOP: 1,
+            ADD_AMUS:2
+        },
         
         lastX: null,
         lastY: null,
@@ -32,8 +39,15 @@ var gb = {
         moveViewDragSpeed: 0.001
     },
     
+    mesh: {
+        plane: null,
+        adding: null
+    },
+    
     stats: null,
     
+    xCnt: 25,
+    yCnt: 25,
     system: null
     
 };
@@ -78,15 +92,17 @@ function init() {
     gb.camera.lookAt(new THREE.Vector3(0, 0, 0));
     gb.scene.add(gb.camera);
     
+    // projector
+    
+    
     // plane
-    var plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(25, 25),
+    gb.mesh.plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(gb.xCnt, gb.yCnt),
             new THREE.MeshLambertMaterial({
-                color: 0x66ff00,
-                side: THREE.DoubleSide
+                color: 0x336600
             }));
-    plane.rotation.x = -Math.PI / 2;
-    gb.scene.add(plane);
+    gb.mesh.plane.rotation.x = -Math.PI / 2;
+    gb.scene.add(gb.mesh.plane);
     
     // light
     var light = new THREE.PointLight(0xcccccc);

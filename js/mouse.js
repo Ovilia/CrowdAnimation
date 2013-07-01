@@ -16,7 +16,7 @@ function mouseEvent() {
         gb.mouse.pressPhi = gb.mouse.lastPhi;
     };
     
-    canvas.onmousemove = function(e) {     
+    canvas.onmousemove = function(e) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -53,6 +53,16 @@ function mouseEvent() {
                 moveCamera(true, -(e.clientX - gb.mouse.lastX)
                         * gb.mouse.moveViewDragSpeed);
             }
+            
+        } else if (gb.mouse.state !== gb.mouse.STATE.NONE) {
+            if (gb.mesh.adding === null) {
+                console.log('add');
+                gb.mesh.adding = new THREE.Mesh(THREE.PlaneGeometry(1, 1),
+                        new THREE.MeshLambertMaterial({
+                            color: 0xff9966
+                        }));
+                gb.scene.add(gb.mesh.adding);
+            }
         }
         
         gb.mouse.lastX = e.clientX;
@@ -64,9 +74,11 @@ function mouseEvent() {
         e.stopPropagation();
         
         gb.mouse.isPressed = false;
+        gb.mouse.state = gb.mouse.STATE.NONE;
         
         gb.mouse.lastX = e.clientX;
         gb.mouse.lastY = e.clientY;
+        console.log('up');
     };
     
     canvas.oncontextmenu = function(e) {
@@ -148,3 +160,8 @@ function moveCamera(isHorizontal, distance) {
     }
     gb.camera.lookAt(gb.lookAt);
 }
+
+$('#addShopBtn').click(function() {
+    console.log('click'); //TODO: WHY not work here
+    gb.mouse.state = gb.mouse.STATE.ADD_SHOP;
+});

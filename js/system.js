@@ -9,12 +9,14 @@ function System() {
 }
 
 System.prototype = {
+    
+    
     addAmusement: function(x1, y1, x2, y2) {
         var height = Math.random() * (this.amusementHeightMax
                 - this.amusementHeightMin) + this.amusementHeightMin;
         
         var color = new THREE.Color();
-        color.setHSL(Math.random(), 0.1, 0.5);
+        color.setHSL(Math.random(), 1, 0.5);
         var mesh = new THREE.Mesh(new THREE.CubeGeometry(
                 Math.abs(x2 - x1), height, Math.abs(y2 - y1)),
             new THREE.MeshLambertMaterial({
@@ -28,7 +30,7 @@ System.prototype = {
     
     addShop: function(x, y) {
         var color = new THREE.Color();
-        color.setHSL(Math.random(), 1.0, 0.5);
+        color.setHSL(Math.random(), 0.75, 0.5);
         var mesh = new THREE.Mesh(new THREE.CubeGeometry(
                 1, this.shopHeight, 1),
             new THREE.MeshLambertMaterial({
