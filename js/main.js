@@ -32,7 +32,9 @@ var gb = {
         moveViewDragSpeed: 0.001
     },
     
-    stats: null
+    stats: null,
+    
+    system: null
     
 };
 
@@ -72,13 +74,13 @@ function init() {
     
     // camera
     gb.camera = new THREE.PerspectiveCamera(45, gb.width / gb.height, 1, 1000);
-    gb.camera.position.set(50, 50, 50);
+    gb.camera.position.set(10, 10, 10);
     gb.camera.lookAt(new THREE.Vector3(0, 0, 0));
     gb.scene.add(gb.camera);
     
     // plane
     var plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(100, 100),
+            new THREE.PlaneGeometry(25, 25),
             new THREE.MeshLambertMaterial({
                 color: 0x66ff00,
                 side: THREE.DoubleSide
@@ -86,18 +88,13 @@ function init() {
     plane.rotation.x = -Math.PI / 2;
     gb.scene.add(plane);
     
-    // temp box to show position
-    var box = new THREE.Mesh(new THREE.CubeGeometry(8, 8, 8),
-            new THREE.MeshLambertMaterial({
-                color: 0xcc0000
-            }));
-    box.position.set(20, 4, 10);
-    gb.scene.add(box);
-    
     // light
     var light = new THREE.PointLight(0xcccccc);
-    light.position.set(200, 500, 0);
+    light.position.set(50, 100, 0);
     gb.scene.add(light);
+    
+    // system
+    gb.system = new System();
     
     // stat.js
     gb.stats = new Stats();
