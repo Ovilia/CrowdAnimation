@@ -7,6 +7,7 @@ var gb = {
     camera: null,
     scene: null,
     projector: null,
+    raycaster: null,
     
     lookAt: new THREE.Vector3(0, 0, 0),
     
@@ -23,6 +24,7 @@ var gb = {
         lastY: null,
         pressX: null,
         pressY: null,
+        mouse2d: null,
         
         lastTheta: Math.PI / 4,
         lastPhi: Math.PI / 4,
@@ -39,9 +41,12 @@ var gb = {
         moveViewDragSpeed: 0.001
     },
     
-    mesh: {
-        plane: null,
-        adding: null
+    plane: {
+        meshes: null,
+        material: {
+            ordinary: null,
+            selected: null
+        }
     },
     
     stats: null,
@@ -93,16 +98,30 @@ function init() {
     gb.scene.add(gb.camera);
     
     // projector
-    
+    gb.projector = new THREE.Projector();
     
     // plane
-    gb.mesh.plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(gb.xCnt, gb.yCnt),
-            new THREE.MeshLambertMaterial({
-                color: 0x336600
-            }));
-    gb.mesh.plane.rotation.x = -Math.PI / 2;
-    gb.scene.add(gb.mesh.plane);
+    gb.plane.material.ordinary = new THREE.MeshLambertMaterial({
+        color: 0x99ff00,
+        wireframe: true
+    });
+    gb.plane.material.selected = new THREE.MeshLambertMaterial({
+        color: 0xcc6666
+    });
+    gb.plane.meshes = new Array(gb.xCnt * gb.yCnt);
+    for (var i = 0; i < gb.xCnt; ++i) {
+        for (var j = 0; j < gb.yCnt; ++j) {
+            var id = i * gb.yCnt + j;
+            gb.plane.meshes[id] = new THREE.Mesh(
+                    new THREE.PlaneGeometry(1, 1),
+                    gb.plane.material.ordinary);
+            gb.plane.meshes[id].rotation.x = -Math.PI / 2;
+            gb.plane.meshes[id].position.set(
+                    i - gb.xCnt / 2, 0, j - gb.yCnt / 2);
+            gb.scene.add(gb.plane.meshes[id]);
+        }
+    }
+    
     
     // light
     var light = new THREE.PointLight(0xcccccc);
@@ -123,6 +142,11 @@ function init() {
 function update() {
     // mouse.js
     checkMoveCamera();
+    
+    if (gb.mouse.mouse2d !== null) {
+        gb.raycaster = gb.projector.pickingRay(
+                gb.mouse.mouse2d.clone(), gb.camera);
+    }
 }
 
 function render() {

@@ -55,18 +55,20 @@ function mouseEvent() {
             }
             
         } else if (gb.mouse.state !== gb.mouse.STATE.NONE) {
-            if (gb.mesh.adding === null) {
-                console.log('add');
-                gb.mesh.adding = new THREE.Mesh(THREE.PlaneGeometry(1, 1),
-                        new THREE.MeshLambertMaterial({
-                            color: 0xff9966
-                        }));
-                gb.scene.add(gb.mesh.adding);
+            var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
+            if (intersects.length > 0) {
+                var len = gb.xCnt * gb.yCnt;
+                for (var i = 0; i < len; ++i) {
+                    gb.plane.meshes[i].material = gb.plane.material.ordinary;
+                }
+                intersects[0].object.material = gb.plane.material.selected;
             }
         }
         
         gb.mouse.lastX = e.clientX;
         gb.mouse.lastY = e.clientY;
+        gb.mouse.mouse2d = new THREE.Vector3(e.clientX / gb.width * 2 - 1,
+                    -e.clientY / gb.height * 2 + 1, 0.5);
     };
     
     canvas.onmouseup = function(e) {
@@ -74,7 +76,10 @@ function mouseEvent() {
         e.stopPropagation();
         
         gb.mouse.isPressed = false;
-        gb.mouse.state = gb.mouse.STATE.NONE;
+        
+        if (e.which === 1) {
+            gb.mouse.state = gb.mouse.STATE.NONE;
+        }        
         
         gb.mouse.lastX = e.clientX;
         gb.mouse.lastY = e.clientY;
@@ -101,6 +106,11 @@ function mouseEvent() {
         gb.mouse.lastX = gb.mouse.lastY
                 = gb.mouse.pressX = gb.mouse.pressY = null;
     }, false);
+    
+    $('#addShopBtn').click(function() {
+        gb.mouse.state = gb.mouse.STATE.ADD_SHOP;
+    });
+
 }
 
 function checkMoveCamera() {
@@ -160,8 +170,3 @@ function moveCamera(isHorizontal, distance) {
     }
     gb.camera.lookAt(gb.lookAt);
 }
-
-$('#addShopBtn').click(function() {
-    console.log('click'); //TODO: WHY not work here
-    gb.mouse.state = gb.mouse.STATE.ADD_SHOP;
-});
