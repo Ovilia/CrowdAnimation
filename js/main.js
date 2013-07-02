@@ -143,7 +143,7 @@ function update() {
     // mouse.js
     checkMoveCamera();
     
-    if (gb.mouse.mouse2d !== null) {
+    if (gb.mouse.mouse2d !== null && gb.mouse.state !== gb.mouse.STATE.NONE) {
         gb.raycaster = gb.projector.pickingRay(
                 gb.mouse.mouse2d.clone(), gb.camera);
     }
