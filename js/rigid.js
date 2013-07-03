@@ -1,5 +1,6 @@
-function Rigid(x1, y1, x2, y2, height, mesh) {
-    
+function Rigid(height, mesh) {
+    this.height = height;
+    this.mesh = mesh;
 }
 
 Rigid.prototype = {
@@ -9,6 +10,16 @@ Rigid.prototype = {
 
 
 function Amusement(x1, y1, x2, y2, height, mesh) {
+    if (x2 < x1) {
+        var tmp = x2;
+        x2 = x1;
+        x1 = tmp;
+    }
+    if (y2 < y1) {
+        var tmp = y2;
+        y2 = y1;
+        y1 = tmp;
+    }
     this.x1 = x1;
     this.y1 = y1;
     this.x2 = x2;

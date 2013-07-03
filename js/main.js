@@ -26,6 +26,13 @@ var gb = {
         pressY: null,
         mouse2d: null,
         
+        ray: {
+            road: null,
+            shop: null,
+            amusement: null,
+            agent: null
+        },
+        
         lastTheta: Math.PI / 4,
         lastPhi: Math.PI / 4,
         pressTheta: Math.PI / 4,
@@ -44,8 +51,10 @@ var gb = {
     plane: {
         meshes: null,
         material: {
-            ordinary: null,
-            selected: null
+            grass: null,
+            road: null,
+            selectedLegal: null,
+            selectedIllegal: null
         }
     },
     
@@ -101,23 +110,30 @@ function init() {
     gb.projector = new THREE.Projector();
     
     // plane
-    gb.plane.material.ordinary = new THREE.MeshLambertMaterial({
-        color: 0x99ff00,
-        wireframe: true
+    var texture = THREE.ImageUtils.loadTexture('image/grass.png');
+    gb.plane.material.grass = new THREE.MeshLambertMaterial({
+        map: texture
     });
-    gb.plane.material.selected = new THREE.MeshLambertMaterial({
-        color: 0xcc6666
+    texture = THREE.ImageUtils.loadTexture('image/road.png');
+    gb.plane.material.road = new THREE.MeshLambertMaterial({
+        map: texture
+    });
+    gb.plane.material.selectedLegal = new THREE.MeshLambertMaterial({
+        color: 0x6699ff
+    });
+    gb.plane.material.selectedIllegal = new THREE.MeshLambertMaterial({
+        color: 0xff3366
     });
     gb.plane.meshes = new Array(gb.xCnt * gb.yCnt);
     for (var i = 0; i < gb.xCnt; ++i) {
         for (var j = 0; j < gb.yCnt; ++j) {
-            var id = i * gb.yCnt + j;
+            var id = j * gb.yCnt + i;
             gb.plane.meshes[id] = new THREE.Mesh(
                     new THREE.PlaneGeometry(1, 1),
-                    gb.plane.material.ordinary);
+                    gb.plane.material.grass);
             gb.plane.meshes[id].rotation.x = -Math.PI / 2;
             gb.plane.meshes[id].position.set(
-                    i - gb.xCnt / 2, 0, j - gb.yCnt / 2);
+                    i - gb.xCnt / 2 + 0.5, 0, j - gb.yCnt / 2 + 0.5);
             gb.scene.add(gb.plane.meshes[id]);
         }
     }

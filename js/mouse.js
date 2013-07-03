@@ -23,6 +23,57 @@ function mouseEvent() {
         if (gb.mouse.isPressed) {
             if (e.which === 1) {
                 // left mouse
+                if (gb.mouse.state === gb.mouse.STATE.ADD_AMUS) {
+                    // select area
+                    var intersects = gb.raycaster.intersectObjects(
+                            gb.plane.meshes);
+                    if (intersects.length > 0) {
+                        // set the selected id
+                        var point = intersects[0].point;
+                        gb.mouse.ray.road.end = {
+                            x: Math.floor(point.x + gb.xCnt / 2 + 0.5),
+                            y: Math.floor(point.z + gb.yCnt / 2 + 0.5)
+                        };
+                        
+                        // set material
+                        var minX = Math.min(gb.mouse.ray.road.start.x,
+                                gb.mouse.ray.road.end.x);
+                        var maxX = Math.max(gb.mouse.ray.road.start.x,
+                                gb.mouse.ray.road.end.x);
+                        var minY = Math.min(gb.mouse.ray.road.start.y,
+                                gb.mouse.ray.road.end.y);
+                        var maxY = Math.max(gb.mouse.ray.road.start.y,
+                                gb.mouse.ray.road.end.y);
+                        gb.mouse.ray.road.start.isLegal = true;
+                        for (var i = 0; i < gb.xCnt; ++i) {
+                            for (var j = 0; j < gb.yCnt; ++j) {
+                                var id = i + j * gb.xCnt;
+                                if (i >= minX && i <= maxX
+                                        && j >= minY && j <= maxY) {
+                                    
+                                    if (gb.system.map[id] ===
+                                            gb.system.MAP_TYPES.NONE) {
+                                        gb.plane.meshes[id].material
+                                            = gb.plane.material.selectedLegal;
+                                    } else {
+                                        gb.plane.meshes[id].material
+                                            = gb.plane.material.selectedIllegal;
+                                        gb.mouse.ray.road.start.isLegal = false;
+                                    }
+                                } else {
+                                    if (gb.system.map[id] ===
+                                            gb.system.MAP_TYPES.ROAD) {
+                                        gb.plane.meshes[id].material
+                                            = gb.plane.material.road;
+                                    } else {
+                                        gb.plane.meshes[id].material
+                                            = gb.plane.material.grass;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 
             } else if (e.which === 2) {
                 // middle mouse
@@ -55,13 +106,42 @@ function mouseEvent() {
             }
             
         } else if (gb.mouse.state !== gb.mouse.STATE.NONE) {
+            // adding something
             var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
             if (intersects.length > 0) {
+                // set the selected id
+                var point = intersects[0].point;
+                gb.mouse.ray.road = {
+                    start: {
+                        x: Math.floor(point.x + gb.xCnt / 2),
+                        y: Math.floor(point.z + gb.yCnt / 2)
+                    }
+                }
+                
+                // set material
                 var len = gb.xCnt * gb.yCnt;
                 for (var i = 0; i < len; ++i) {
-                    gb.plane.meshes[i].material = gb.plane.material.ordinary;
+                    if (intersects[0].object === gb.plane.meshes[i]) {
+                        if (gb.system.map[i] === gb.system.MAP_TYPES.NONE) {
+                            intersects[0].object.material
+                                    = gb.plane.material.selectedLegal;
+                            gb.mouse.ray.road.start.isLegal = true;
+                        } else {
+                            intersects[0].object.material
+                                    = gb.plane.material.selectedIllegal;
+                            gb.mouse.ray.road.start.isLegal = false;
+                        }
+                    } else {
+                        if (gb.system.map[i] === gb.system.MAP_TYPES.ROAD) {
+                            gb.plane.meshes[i].material
+                                    = gb.plane.material.road;
+                        } else {
+                            gb.plane.meshes[i].material
+                                    = gb.plane.material.grass;
+                        }
+                        
+                    }
                 }
-                intersects[0].object.material = gb.plane.material.selected;
             }
         }
         
@@ -78,12 +158,34 @@ function mouseEvent() {
         gb.mouse.isPressed = false;
         
         if (e.which === 1) {
-            gb.mouse.state = gb.mouse.STATE.NONE;
+            if (gb.mouse.state !== gb.mouse.STATE.NONE
+                    && gb.mouse.ray.road.start.isLegal) {
+                if (gb.mouse.state === gb.mouse.STATE.ADD_SHOP) {
+                    // add shop
+                    gb.system.addShop(gb.mouse.ray.road.start.x,
+                            gb.mouse.ray.road.start.y);
+                } else if (gb.mouse.state === gb.mouse.STATE.ADD_AMUS) {
+                    // add amusement
+                    gb.system.addAmusement(gb.mouse.ray.road.start.x,
+                            gb.mouse.ray.road.start.y, gb.mouse.ray.road.end.x,
+                            gb.mouse.ray.road.end.y);
+                }
+                for (var i = 0; i < gb.xCnt * gb.yCnt; ++i) {
+                    if (gb.system.map[i] === gb.system.MAP_TYPES.ROAD) {
+                        gb.plane.meshes[i].material = gb.plane.material.road;
+                    } else {
+                        gb.plane.meshes[i].material = gb.plane.material.grass;
+                    }
+                }
+                
+                gb.mouse.state = gb.mouse.STATE.NONE;
+                gb.mouse.ray.road = null;
+            }
+            
         }        
         
         gb.mouse.lastX = e.clientX;
         gb.mouse.lastY = e.clientY;
-        console.log('up');
     };
     
     canvas.oncontextmenu = function(e) {
@@ -109,6 +211,10 @@ function mouseEvent() {
     
     $('#addShopBtn').click(function() {
         gb.mouse.state = gb.mouse.STATE.ADD_SHOP;
+    });
+    
+    $('#addAmusBtn').click(function() {
+        gb.mouse.state = gb.mouse.STATE.ADD_AMUS;
     });
 
 }
