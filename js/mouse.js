@@ -4,6 +4,21 @@ function mouseEvent() {
         e.preventDefault();
         e.stopPropagation();
         
+        if (gb.mouse.state === gb.mouse.STATE.ADD_ROAD) {
+            var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
+            if (intersects.length > 0) {
+                var point = intersects[0].point;
+                var id = Math.floor(point.x + gb.xCnt / 2)
+                        + Math.floor(point.z + gb.yCnt / 2)
+                        * gb.xCnt;
+                if (gb.system.map[id] === gb.system.MAP_TYPES.NONE) {
+                    gb.plane.meshes[id].material
+                            = gb.plane.material.road;
+                    gb.system.map[id] = gb.system.MAP_TYPES.ROAD;
+                }
+            }
+        }
+        
         gb.mouse.isPressed = true;
         
         gb.mouse.pressX = e.clientX;
@@ -71,6 +86,20 @@ function mouseEvent() {
                                     }
                                 }
                             }
+                        }
+                    }
+                } else if (gb.mouse.state === gb.mouse.STATE.ADD_ROAD) {
+                    var intersects = gb.raycaster.intersectObjects(
+                            gb.plane.meshes);
+                    if (intersects.length > 0) {
+                        var point = intersects[0].point;
+                        var id = Math.floor(point.x + gb.xCnt / 2)
+                                + Math.floor(point.z + gb.yCnt / 2)
+                                * gb.xCnt;
+                        if (gb.system.map[id] === gb.system.MAP_TYPES.NONE) {
+                            gb.plane.meshes[id].material
+                                    = gb.plane.material.road;
+                            gb.system.map[id] = gb.system.MAP_TYPES.ROAD;
                         }
                     }
                 }
@@ -181,8 +210,7 @@ function mouseEvent() {
                 gb.mouse.state = gb.mouse.STATE.NONE;
                 gb.mouse.ray.road = null;
             }
-            
-        }        
+        }
         
         gb.mouse.lastX = e.clientX;
         gb.mouse.lastY = e.clientY;
@@ -216,6 +244,10 @@ function mouseEvent() {
     $('#addAmusBtn').click(function() {
         gb.mouse.state = gb.mouse.STATE.ADD_AMUS;
     });
+    
+    $('#addRoadBtn').click(function() {
+        gb.mouse.state = gb.mouse.STATE.ADD_ROAD;
+    })
 
 }
 

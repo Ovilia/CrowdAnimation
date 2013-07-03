@@ -17,7 +17,8 @@ var gb = {
         STATE: {
             NONE: 0,
             ADD_SHOP: 1,
-            ADD_AMUS:2
+            ADD_AMUS: 2,
+            ADD_ROAD: 3
         },
         
         lastX: null,
@@ -127,7 +128,7 @@ function init() {
     gb.plane.meshes = new Array(gb.xCnt * gb.yCnt);
     for (var i = 0; i < gb.xCnt; ++i) {
         for (var j = 0; j < gb.yCnt; ++j) {
-            var id = j * gb.yCnt + i;
+            var id = j * gb.xCnt + i;
             gb.plane.meshes[id] = new THREE.Mesh(
                     new THREE.PlaneGeometry(1, 1),
                     gb.plane.material.grass);
