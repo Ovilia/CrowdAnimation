@@ -8,6 +8,9 @@ function System() {
     for (var i = 0; i < cnt; ++i) {
         this.map[i] = this.MAP_TYPES.NONE;
     }
+    
+    this.expectedAgentCnt = 0;
+    this.agentCnt = 0;
 }
 
 System.prototype = {
@@ -15,8 +18,55 @@ System.prototype = {
     shopPadding: 0.2,
     
     amusementHeightMin: 0.5,
-    amusementHeightMax: 5,
+    amusementHeightMax: 3,
     amusementPadding: 0.5,
+    
+    agentWidthMin: 0.15,
+    agentWidthMax: 0.25,
+    agentHeightMin: 0.4,
+    agentHeightMax: 0.8,
+    agentThickness: 0.1,
+    groupMaxAgent: 6,
+    agentMaxV: 0.02,
+    
+    entrance: null,
+    
+    init: function() {
+        this.expectedAgentCnt = 20;
+        this.entrance = new THREE.Vector3(-gb.xCnt / 2, 0, 0);
+        
+        // original road
+        for (var i = 0; i < 10; ++i) {
+            var id = 12 * gb.xCnt + i;
+            this.map[id] = this.MAP_TYPES.ROAD;
+            gb.plane.meshes[id].material = gb.plane.material.road;
+        }
+    },
+    
+    update: function() {
+        var that = this;
+        
+        addAgent();
+        updateAgent();
+        
+        function addAgent() {
+            // add new agent
+            if (that.agentCnt < that.expectedAgentCnt && Math.random() > 0.95) {
+                var cnt = Math.random() * that.groupMaxAgent;
+                that.addAgents(cnt);
+            }
+        }
+        
+        function updateAgent() {
+            var len = that.agents.length;
+            for (var i = 0; i < len; ++i) {
+                if (that.agents[i]) {
+                    that.agents[i].mesh.position.x +=
+                            that.agents[i].maxV * Math.random();
+                }
+            }
+        }
+    },
     
     addAmusement: function(x1, y1, x2, y2) {
         var height = Math.random() * (this.amusementHeightMax
@@ -64,6 +114,30 @@ System.prototype = {
         
         // update map
         this.map[x + y * gb.xCnt] = this.MAP_TYPES.SHOP;
+    },
+    
+    // add a group of agents
+    addAgents: function(cnt) {
+        var color = new THREE.Color();
+        color.setHSL(Math.random(), 1, 0.5);
+        for (var i = 0; i < cnt; ++i) {
+            var z = Math.random() * (this.agentWidthMax - this.agentWidthMin)
+                    + this.agentWidthMin;
+            var y = Math.random() * (this.agentHeightMax - this.agentHeightMin)
+                    + this.agentHeightMin;
+            var x = this.agentThickness;
+            var mesh = new THREE.Mesh(new THREE.CubeGeometry(x, y, z),
+                new THREE.MeshLambertMaterial({
+                    color: color.getHex()
+                }));
+            mesh.position.set(this.entrance.x, this.entrance.y,
+                    this.entrance.z);
+            gb.scene.add(mesh);
+            
+            this.agents.push(new Agent(x, y, z, mesh,
+                    Math.random() * this.agentMaxV));
+        }
+        this.agentCnt += cnt;
     },
     
     clear: function() {

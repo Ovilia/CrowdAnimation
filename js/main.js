@@ -147,6 +147,7 @@ function init() {
     
     // system
     gb.system = new System();
+    gb.system.init();
     
     // stat.js
     gb.stats = new Stats();
@@ -164,6 +165,8 @@ function update() {
         gb.raycaster = gb.projector.pickingRay(
                 gb.mouse.mouse2d.clone(), gb.camera);
     }
+    
+    gb.system.update();
 }
 
 function render() {
