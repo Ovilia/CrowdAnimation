@@ -3,13 +3,17 @@ function System() {
     this.shops = new Array();
     this.agents = new Array();
     
-    var cnt = gb.xCnt * gb.yCnt;
-    this.map = new Array(cnt);
-    for (var i = 0; i < cnt; ++i) {
-        this.map[i] = this.MAP_TYPES.NONE;
+    // path search graph
+    var graphArray = new Array(gb.xCnt);
+    for (var i = 0; i < gb.xCnt; ++i) {
+        graphArray[i] = new Array(gb.yCnt);
+        for (var j = 0; j < gb.yCnt; ++j) {
+            graphArray[i][j] = this.MAP_TYPES.NONE;
+        }
     }
+    this.graph = new Graph(graphArray);
     
-    this.pathFinder = new PathFinder(this.map);
+    this.pathFinder = new PathFinder(this.graph);
     
     this.expectedAgentCnt = 0;
     this.agentCnt = 0;
@@ -40,7 +44,7 @@ System.prototype = {
         // original road
         for (var i = 0; i < 10; ++i) {
             var id = 12 * gb.xCnt + i;
-            this.map[id] = this.MAP_TYPES.ROAD;
+            this.graph.nodes[i][12].type = this.MAP_TYPES.ROAD;
             gb.plane.meshes[id].material = gb.plane.material.road;
         }
     },
@@ -90,7 +94,7 @@ System.prototype = {
         var maxY = Math.max(y1, y2);
         for (var i = minX; i <= maxX; ++i) {
             for (var j = minY; j <= maxY; ++j) {
-                this.map[i + j * gb.xCnt] = this.MAP_TYPES.AMUSEMENT;
+                this.graph.nodes[i][j].type = this.MAP_TYPES.AMUSEMENT;
             }
         }
     },
@@ -110,7 +114,7 @@ System.prototype = {
         this.shops.push(new Shop(x, y, this.shopHeight, mesh));
         
         // update map
-        this.map[x + y * gb.xCnt] = this.MAP_TYPES.SHOP;
+        this.graph.nodes[x][y].type = this.MAP_TYPES.SHOP;
     },
     
     // add a group of agents
@@ -169,9 +173,11 @@ System.prototype = {
     },
     
     MAP_TYPES: {
-        NONE: 1,
+        NONE: 0,
+        
+        ROAD: 1, // open for path finder
+        
         SHOP: 2,
-        AMUSEMENT: 3,
-        ROAD: 4
+        AMUSEMENT: 3
     }
 };

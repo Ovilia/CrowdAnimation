@@ -8,13 +8,13 @@ function mouseEvent() {
             var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
             if (intersects.length > 0) {
                 var point = intersects[0].point;
-                var id = Math.floor(point.x + gb.xCnt / 2)
-                        + Math.floor(point.z + gb.yCnt / 2)
-                        * gb.xCnt;
-                if (gb.system.map[id] === gb.system.MAP_TYPES.NONE) {
-                    gb.plane.meshes[id].material
+                var x = Math.floor(point.x + gb.xCnt / 2);
+                var y = Math.floor(point.z + gb.yCnt / 2);
+                if (gb.system.graph.nodes[x][y].type
+                            === gb.system.MAP_TYPES.NONE) {
+                    gb.plane.meshes[x + y * gb.xCnt].material
                             = gb.plane.material.road;
-                    gb.system.map[id] = gb.system.MAP_TYPES.ROAD;
+                    gb.system.graph.nodes[x][y].type = gb.system.MAP_TYPES.ROAD;
                 }
             }
         }
@@ -66,7 +66,7 @@ function mouseEvent() {
                                 if (i >= minX && i <= maxX
                                         && j >= minY && j <= maxY) {
                                     
-                                    if (gb.system.map[id] ===
+                                    if (gb.system.graph.nodes[i][j].type ===
                                             gb.system.MAP_TYPES.NONE) {
                                         gb.plane.meshes[id].material
                                             = gb.plane.material.selectedLegal;
@@ -76,7 +76,7 @@ function mouseEvent() {
                                         gb.mouse.ray.road.start.isLegal = false;
                                     }
                                 } else {
-                                    if (gb.system.map[id] ===
+                                    if (gb.system.graph.nodes[i][j].type ===
                                             gb.system.MAP_TYPES.ROAD) {
                                         gb.plane.meshes[id].material
                                             = gb.plane.material.road;
@@ -93,13 +93,14 @@ function mouseEvent() {
                             gb.plane.meshes);
                     if (intersects.length > 0) {
                         var point = intersects[0].point;
-                        var id = Math.floor(point.x + gb.xCnt / 2)
-                                + Math.floor(point.z + gb.yCnt / 2)
-                                * gb.xCnt;
-                        if (gb.system.map[id] === gb.system.MAP_TYPES.NONE) {
-                            gb.plane.meshes[id].material
+                        var x = Math.floor(point.x + gb.xCnt / 2);
+                        var y = Math.floor(point.z + gb.yCnt / 2);
+                        if (gb.system.graph.nodes[x][y].type
+                                === gb.system.MAP_TYPES.NONE) {
+                            gb.plane.meshes[x + y * gb.xCnt].material
                                     = gb.plane.material.road;
-                            gb.system.map[id] = gb.system.MAP_TYPES.ROAD;
+                            gb.system.graph.nodes[x][y].type
+                                    = gb.system.MAP_TYPES.ROAD;
                         }
                     }
                 }
@@ -144,31 +145,38 @@ function mouseEvent() {
                     start: {
                         x: Math.floor(point.x + gb.xCnt / 2),
                         y: Math.floor(point.z + gb.yCnt / 2)
+                    },
+                    end: {
+                        x: Math.floor(point.x + gb.xCnt / 2),
+                        y: Math.floor(point.z + gb.yCnt / 2)
                     }
-                }
+                };
                 
                 // set material
-                var len = gb.xCnt * gb.yCnt;
-                for (var i = 0; i < len; ++i) {
-                    if (intersects[0].object === gb.plane.meshes[i]) {
-                        if (gb.system.map[i] === gb.system.MAP_TYPES.NONE) {
-                            intersects[0].object.material
-                                    = gb.plane.material.selectedLegal;
-                            gb.mouse.ray.road.start.isLegal = true;
+                for (var i = 0; i < gb.xCnt; ++i) {
+                    for (var j = 0; j < gb.yCnt; ++j) {
+                        var id = i + j * gb.xCnt;
+                        if (intersects[0].object === gb.plane.meshes[id]) {
+                            if (gb.system.graph.nodes[i][j].type
+                                        === gb.system.MAP_TYPES.NONE) {
+                                intersects[0].object.material
+                                        = gb.plane.material.selectedLegal;
+                                gb.mouse.ray.road.start.isLegal = true;
+                            } else {
+                                intersects[0].object.material
+                                        = gb.plane.material.selectedIllegal;
+                                gb.mouse.ray.road.start.isLegal = false;
+                            }
                         } else {
-                            intersects[0].object.material
-                                    = gb.plane.material.selectedIllegal;
-                            gb.mouse.ray.road.start.isLegal = false;
+                            if (gb.system.graph.nodes[i][j].type
+                                        === gb.system.MAP_TYPES.ROAD) {
+                                gb.plane.meshes[id].material
+                                        = gb.plane.material.road;
+                            } else {
+                                gb.plane.meshes[id].material
+                                        = gb.plane.material.grass;
+                            }
                         }
-                    } else {
-                        if (gb.system.map[i] === gb.system.MAP_TYPES.ROAD) {
-                            gb.plane.meshes[i].material
-                                    = gb.plane.material.road;
-                        } else {
-                            gb.plane.meshes[i].material
-                                    = gb.plane.material.grass;
-                        }
-                        
                     }
                 }
             }
@@ -199,11 +207,17 @@ function mouseEvent() {
                             gb.mouse.ray.road.start.y, gb.mouse.ray.road.end.x,
                             gb.mouse.ray.road.end.y);
                 }
-                for (var i = 0; i < gb.xCnt * gb.yCnt; ++i) {
-                    if (gb.system.map[i] === gb.system.MAP_TYPES.ROAD) {
-                        gb.plane.meshes[i].material = gb.plane.material.road;
-                    } else {
-                        gb.plane.meshes[i].material = gb.plane.material.grass;
+                for (var i = 0; i < gb.xCnt; ++i) {
+                    for (var j = 0; j < gb.yCnt; ++j) {
+                        var id = j * gb.xCnt + i;
+                        if (gb.system.graph.nodes[i][j].type
+                                    === gb.system.MAP_TYPES.ROAD) {
+                            gb.plane.meshes[id].material
+                                    = gb.plane.material.road;
+                        } else {
+                            gb.plane.meshes[id].material
+                                    = gb.plane.material.grass;
+                        }
                     }
                 }
                 

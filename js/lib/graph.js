@@ -57,7 +57,7 @@ GraphNode.prototype.toString = function() {
 };
 
 GraphNode.prototype.isWall = function() {
-    return this.type == GraphNodeType.WALL;
+    return this.type !== GraphNodeType.OPEN;
 };
 
 
