@@ -42,21 +42,19 @@ Agent.prototype = {
                 if (step) {
                     if (step.x) {
                         var oldX = gb.system.getRoadXy(this.s.x);
-                        this.s.x += this.maxV * Math.random();
+                        this.s.x += this.maxV * step.x;
                         var newX = gb.system.getRoadXy(this.s.x);
-                        if (oldX != newX) {
+                        if (oldX !== newX) {
                             // move to next step
                             ++this.path.current;
-                            console.log('cross x');
                         }
                     } else {
                         var oldY = gb.system.getRoadXy(this.s.z);
-                        this.s.z += this.maxV;
+                        this.s.z += this.maxV * step.y;
                         var newY = gb.system.getRoadXy(this.s.z);
-                        if (oldY != newY) {
+                        if (oldY !== newY) {
                             // move to next step
                             ++this.path.current;
-                            console.log('cross z');
                         }
                     }
                 } else {

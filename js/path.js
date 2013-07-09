@@ -30,7 +30,7 @@ PathFinder.prototype = {
                 moves.push({x: 1});
             }
         } else {
-            for (var i = 0; i < dx; ++i) {
+            for (var i = 0; i < -dx; ++i) {
                 moves.push({x: -1});
             }
         }
@@ -41,7 +41,7 @@ PathFinder.prototype = {
                 moves.push({y: 1});
             }
         } else {
-            for (var i = 0; i < dy; ++i) {
+            for (var i = 0; i < -dy; ++i) {
                 moves.push({y: -1});
             }
         }
@@ -63,8 +63,8 @@ function Path(startX, startY, steps) {
     this.steps = steps;
     var len = this.steps.length;
     for (var i = 0; i < len; ++i) {
-        this.steps[i].absX = startX + this.steps[i].x || 0;
-        this.steps[i].absY = startY + this.steps[i].y || 0;
+        this.steps[i].absX = startX + (this.steps[i].x || 0);
+        this.steps[i].absY = startY + (this.steps[i].y || 0);
         startX = this.steps[i].absX;
         startY = this.steps[i].absY;
     }
