@@ -249,6 +249,10 @@ function mouseEvent() {
         gb.mouse.state = gb.mouse.STATE.ADD_ROAD;
     })
 
+    $('#addAgentsBtn').click(function() {
+        //gb.system.expectedAgentCnt += 5;
+        gb.system.addAgents(1);
+    })
 }
 
 function checkMoveCamera() {

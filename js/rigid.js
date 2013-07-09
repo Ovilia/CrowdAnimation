@@ -39,6 +39,13 @@ function Shop(x, y, height, mesh) {
     this.height = height;
     
     this.mesh = mesh;
+    
+    //this.type = Math.floor(Math.random() * this.protptype.TYPE.length);
 }
 
 Shop.prototype = new Rigid();
+
+Shop.prototype.TYPE = {
+    FOOD: 0,
+    DRINK: 1
+};

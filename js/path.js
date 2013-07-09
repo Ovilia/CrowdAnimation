@@ -23,7 +23,29 @@ PathFinder.prototype = {
     },
     
     findPath: function(startX, startY, desX, desY) {
+        var moves = [];
+        var dx = desX - startX;
+        if (desX > startX) {
+            for (var i = 0; i < dx; ++i) {
+                moves.push({x: 1});
+            }
+        } else {
+            for (var i = 0; i < dx; ++i) {
+                moves.push({x: -1});
+            }
+        }
         
+        var dy = desY - startY;
+        if (desY > startY) {
+            for (var i = 0; i < dy; ++i) {
+                moves.push({y: 1});
+            }
+        } else {
+            for (var i = 0; i < dy; ++i) {
+                moves.push({y: -1});
+            }
+        }
+        return new Path(startX, startY, moves);
     }
 };
 

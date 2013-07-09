@@ -9,7 +9,7 @@ function System() {
         this.map[i] = this.MAP_TYPES.NONE;
     }
     
-    this.pathFinder = new PathFinder(map);
+    this.pathFinder = new PathFinder(this.map);
     
     this.expectedAgentCnt = 0;
     this.agentCnt = 0;
@@ -35,7 +35,6 @@ System.prototype = {
     entrance: null,
     
     init: function() {
-        this.expectedAgentCnt = 2;
         this.entrance = new THREE.Vector3(-gb.xCnt / 2, 0, 0);
         
         // original road
@@ -50,6 +49,12 @@ System.prototype = {
         var that = this;
         
         addAgent();
+        
+        // update agents
+        var len = this.agents.length;
+        for (var i = 0; i < len; ++i) {
+            this.agents[i].update();
+        }
         
         function addAgent() {
             // add new agent
@@ -156,11 +161,11 @@ System.prototype = {
     },
     
     getRoadXy: function(x) {
-        return Math.floor(x + 0.5);
+        return Math.floor(x + 12.5);
     },
     
     getRoadId: function(x, y) {
-        return Math.floor(x + 0.5) + Math.floor(y + 0.5) * gb.yCnt;
+        return Math.floor(x + 12.5) + Math.floor(y + 12.5) * gb.yCnt;
     },
     
     MAP_TYPES: {
