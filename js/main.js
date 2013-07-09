@@ -139,11 +139,14 @@ function init() {
         }
     }
     
-    
     // light
     var light = new THREE.PointLight(0xcccccc);
     light.position.set(50, 100, 0);
     gb.scene.add(light);
+    
+    var moveLight = new THREE.PointLight(0xffdd00, 0.5);
+    moveLight.position = gb.camera.position;
+    gb.scene.add(moveLight);
     
     // system
     gb.system = new System();

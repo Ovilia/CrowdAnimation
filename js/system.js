@@ -9,6 +9,8 @@ function System() {
         this.map[i] = this.MAP_TYPES.NONE;
     }
     
+    this.pathFinder = new PathFinder(map);
+    
     this.expectedAgentCnt = 0;
     this.agentCnt = 0;
 }
@@ -23,16 +25,17 @@ System.prototype = {
     
     agentWidthMin: 0.15,
     agentWidthMax: 0.25,
-    agentHeightMin: 0.4,
-    agentHeightMax: 0.8,
+    agentHeightMin: 0.2,
+    agentHeightMax: 0.6,
     agentThickness: 0.1,
     groupMaxAgent: 6,
     agentMaxV: 0.02,
+    agentMinV: 0.002,
     
     entrance: null,
     
     init: function() {
-        this.expectedAgentCnt = 20;
+        this.expectedAgentCnt = 2;
         this.entrance = new THREE.Vector3(-gb.xCnt / 2, 0, 0);
         
         // original road
@@ -47,23 +50,12 @@ System.prototype = {
         var that = this;
         
         addAgent();
-        updateAgent();
         
         function addAgent() {
             // add new agent
-            if (that.agentCnt < that.expectedAgentCnt && Math.random() > 0.95) {
+            if (that.agentCnt < that.expectedAgentCnt && Math.random() > 0.99) {
                 var cnt = Math.random() * that.groupMaxAgent;
                 that.addAgents(cnt);
-            }
-        }
-        
-        function updateAgent() {
-            var len = that.agents.length;
-            for (var i = 0; i < len; ++i) {
-                if (that.agents[i]) {
-                    that.agents[i].mesh.position.x +=
-                            that.agents[i].maxV * Math.random();
-                }
             }
         }
     },
@@ -130,12 +122,13 @@ System.prototype = {
                 new THREE.MeshLambertMaterial({
                     color: color.getHex()
                 }));
-            mesh.position.set(this.entrance.x, this.entrance.y,
+            mesh.position.set(this.entrance.x, this.entrance.y + y / 2,
                     this.entrance.z);
             gb.scene.add(mesh);
             
-            this.agents.push(new Agent(x, y, z, mesh,
-                    Math.random() * this.agentMaxV));
+            var v = Math.random() * (this.agentMaxV - this.agentMinV)
+                    + this.agentMinV;
+            this.agents.push(new Agent(x, y, z, mesh, v));
         }
         this.agentCnt += cnt;
     },
@@ -160,6 +153,14 @@ System.prototype = {
         this.shops = new Array();
         
         this.agents = new Array();
+    },
+    
+    getRoadXy: function(x) {
+        return Math.floor(x + 0.5);
+    },
+    
+    getRoadId: function(x, y) {
+        return Math.floor(x + 0.5) + Math.floor(y + 0.5) * gb.yCnt;
     },
     
     MAP_TYPES: {
