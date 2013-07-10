@@ -10,6 +10,7 @@ function Agent(x, y, z, mesh, maxV) {
     
     this.state = this.STATE.EXPLORING;
     
+    this.dest = null;
     this.path = null;
 }
 
@@ -23,7 +24,7 @@ Agent.prototype = {
     },
     
     update: function() {
-        if (this.state !== this.STATE.USING) {
+        if (this.state === this.STATE.EXPLORING) {
             if (this.path === null) {
                 // compute path
                 if (Math.random() > 0.4) {
@@ -31,27 +32,36 @@ Agent.prototype = {
                 } else {
                     this.goShop();
                 }
-            } else {
-                // going along the path
-                var step = this.path.steps[this.path.current];
-                if (step) {
-                    if (step.x) {
-                        this.s.x += this.maxV * step.x;
-                        if (Math.abs(this.s.x - step.absX + 12) < 0.01) {
-                            // move to next step
-                            ++this.path.current;
-                        }
-                    } else {
-                        this.s.z += this.maxV * step.y;
-                        if (Math.abs(this.s.z - step.absY + 12) < 0.01) {
-                            // move to next step
-                            ++this.path.current;
-                        }
+            }
+        }
+        // going along the path
+        if (this.path) {
+            var step = this.path.steps[this.path.current];
+            if (step) {
+                if (step.x) {
+                    this.s.x += this.maxV * step.x;
+                    if ((step.x > 0 && this.s.x >= step.absX - 12) ||
+                            (step.x < 0 && this.s.x <= step.absX - 12)) {
+                        // move to next step
+                        ++this.path.current;
                     }
                 } else {
-                    // end of path
-                    this.path = null;
+                    this.s.z += this.maxV * step.y;
+                    if ((step.y > 0 && this.s.z >= step.absY - 12) ||
+                            (step.y < 0 && this.s.z <= step.absY - 12)) {
+                        // move to next step
+                        ++this.path.current;
+                    }
+                }
+            } else {
+                // end of path
+                this.path = null;
+                if (this.state === this.STATE.GOING) {
                     this.state = this.STATE.USING;
+                    this.dest.agentIn(this);
+                } else {
+                    this.state = this.STATE.EXPLORING;
+                    this.dest = null;
                 }
             }
         }
@@ -68,6 +78,7 @@ Agent.prototype = {
                     gb.system.getRoadXy(this.s.x),
                     gb.system.getRoadXy(this.s.z),
                     dest.x, dest.y);
+            this.dest = dest;
             this.state = this.STATE.GOING;
         }
     },
@@ -84,6 +95,7 @@ Agent.prototype = {
                     gb.system.getRoadXy(this.s.z),
                     dest.inPos.x, dest.inPos.y);
             this.path.add(dest.entrance.x, dest.entrance.y);
+            this.dest = dest;
             this.state = this.STATE.GOING;
         }
     }

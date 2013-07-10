@@ -60,6 +60,20 @@ System.prototype = {
             this.agents[i].update();
         }
         
+        // update shops and amusements
+        len = this.shops.length;
+        for (var i = 0; i < len; ++i) {
+            if (this.shops[i]) {
+                this.shops[i].update();
+            }
+        }
+        len = this.amusements.length;
+        for (var i = 0; i < len; ++i) {
+            if (this.amusements[i]) {
+                this.amusements[i].update();
+            }
+        }
+        
         function addAgent() {
             // add new agent
             if (that.agentCnt < that.expectedAgentCnt && Math.random() > 0.99) {
