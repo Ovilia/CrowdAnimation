@@ -27,9 +27,45 @@ function Amusement(x1, y1, x2, y2, height, mesh) {
     this.height = height;
     
     this.mesh = mesh;
+    
+    this.inPos = null;
+    this.inMesh = null;
+    this.entrance = null;
 }
 
 Amusement.prototype = new Rigid();
+
+Amusement.prototype.setIn = function(x, y, mesh) {
+    this.inPos = {
+        x: x,
+        y: y
+    };
+    this.inMesh = mesh;
+    
+    if (x === this.x1 - 1) {
+        this.entrance = {
+            x: this.x1,
+            y: y
+        };
+    } else if (x === this.x2 + 1) {
+        this.entrance = {
+            x: this.x2,
+            y: y
+        };
+    } else if (y === this.y1 - 1) {
+        this.entrance = {
+            x: x,
+            y: this.y1
+        };
+    } else if (y === this.y2 + 1) {
+        this.entrance = {
+            x: x,
+            y: this.y2
+        };
+    } else {
+        console.error('Error entrance position!');
+    }
+}
 
 
 

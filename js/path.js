@@ -40,3 +40,23 @@ function Path(startX, startY, path) {
     
     this.current = 0;
 }
+
+Path.prototype = {
+    add: function(absX, absY) {
+        if (this.steps.length > 0) {
+            this.steps.push({
+                absX: absX,
+                absY: absY,
+                x: absX - this.steps[this.steps.length - 1].absX,
+                y: absY - this.steps[this.steps.length - 1].absY
+            });
+        } else {
+            this.steps.push({
+                absX: absX,
+                absY: absY,
+                x: absX - this.start.x,
+                y: absY - this.start.y
+            });
+        }
+    }
+}

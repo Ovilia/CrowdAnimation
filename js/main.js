@@ -18,7 +18,8 @@ var gb = {
             NONE: 0,
             ADD_SHOP: 1,
             ADD_AMUS: 2,
-            ADD_ROAD: 3
+            ADD_AMUS_IN: 2.1,
+            ADD_ROAD: 3,
         },
         
         lastX: null,
@@ -144,7 +145,7 @@ function init() {
     light.position.set(50, 100, 0);
     gb.scene.add(light);
     
-    var moveLight = new THREE.PointLight(0xffdd00, 0.5);
+    var moveLight = new THREE.PointLight(0x666666, 0.5);
     moveLight.position = gb.camera.position;
     gb.scene.add(moveLight);
     

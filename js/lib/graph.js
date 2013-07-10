@@ -4,12 +4,6 @@
 // Includes Binary Heap (with modifications) from Marijn Haverbeke. 
 // http://eloquentjavascript.net/appendix2.html
 
-
-var GraphNodeType = { 
-    OPEN: 1, 
-    WALL: 0 
-};
-
 // Creates a Graph class used in the astar search algorithm.
 function Graph(grid) {
     var nodes = [];
@@ -57,7 +51,8 @@ GraphNode.prototype.toString = function() {
 };
 
 GraphNode.prototype.isWall = function() {
-    return this.type !== GraphNodeType.OPEN;
+    return this.type !== gb.system.MAP_TYPES.ROAD
+            && this.type !== gb.system.MAP_TYPES.AMUSE_IN;
 };
 
 

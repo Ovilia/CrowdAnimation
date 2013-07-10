@@ -4,7 +4,7 @@ function mouseEvent() {
         e.preventDefault();
         e.stopPropagation();
         
-        if (gb.mouse.state === gb.mouse.STATE.ADD_ROAD) {
+        if (gb.mouse.state === gb.mouse.STATE.ADD_ROAD && e.which === 1) {
             var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
             if (intersects.length > 0) {
                 var point = intersects[0].point;
@@ -158,7 +158,10 @@ function mouseEvent() {
                         var id = i + j * gb.xCnt;
                         if (intersects[0].object === gb.plane.meshes[id]) {
                             if (gb.system.graph.nodes[i][j].type
-                                        === gb.system.MAP_TYPES.NONE) {
+                                        === gb.system.MAP_TYPES.NONE &&
+                                        (gb.mouse.state !==
+                                        gb.mouse.STATE.ADD_AMUS_IN ||
+                                        gb.system.isLegalAmuseIn(i, j))) {
                                 intersects[0].object.material
                                         = gb.plane.material.selectedLegal;
                                 gb.mouse.ray.road.start.isLegal = true;
@@ -201,12 +204,22 @@ function mouseEvent() {
                     // add shop
                     gb.system.addShop(gb.mouse.ray.road.start.x,
                             gb.mouse.ray.road.start.y);
+                    gb.mouse.state = gb.mouse.STATE.NONE;
                 } else if (gb.mouse.state === gb.mouse.STATE.ADD_AMUS) {
                     // add amusement
                     gb.system.addAmusement(gb.mouse.ray.road.start.x,
                             gb.mouse.ray.road.start.y, gb.mouse.ray.road.end.x,
                             gb.mouse.ray.road.end.y);
+                    gb.mouse.state = gb.mouse.STATE.ADD_AMUS_IN;
+                } else if (gb.mouse.state === gb.mouse.STATE.ADD_AMUS_IN) {
+                    // add amusement in
+                    gb.system.setAmuseIn(gb.mouse.ray.road.start.x,
+                            gb.mouse.ray.road.start.y);
+                    gb.mouse.state = gb.mouse.STATE.NONE;
+                } else {
+                    gb.mouse.state = gb.mouse.STATE.NONE;
                 }
+                
                 for (var i = 0; i < gb.xCnt; ++i) {
                     for (var j = 0; j < gb.yCnt; ++j) {
                         var id = j * gb.xCnt + i;
@@ -221,7 +234,6 @@ function mouseEvent() {
                     }
                 }
                 
-                gb.mouse.state = gb.mouse.STATE.NONE;
                 gb.mouse.ray.road = null;
             }
         }

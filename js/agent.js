@@ -26,16 +26,11 @@ Agent.prototype = {
         if (this.state !== this.STATE.USING) {
             if (this.path === null) {
                 // compute path
-                var shops = gb.system.shops;
-                if (shops.length < 1) {
-                    return;
+                if (Math.random() > 0.4) {
+                    this.goAmuse();
+                } else {
+                    this.goShop();
                 }
-                var dest = shops[Math.floor(Math.random() * shops.length)];
-                this.path = gb.system.pathFinder.findPath(
-                        gb.system.getRoadXy(this.s.x),
-                        gb.system.getRoadXy(this.s.z),
-                        dest.x, dest.y);
-                this.state = this.STATE.GOING;
             } else {
                 // going along the path
                 var step = this.path.steps[this.path.current];
@@ -45,14 +40,12 @@ Agent.prototype = {
                         if (Math.abs(this.s.x - step.absX + 12) < 0.01) {
                             // move to next step
                             ++this.path.current;
-                            console.log('x')
                         }
                     } else {
                         this.s.z += this.maxV * step.y;
                         if (Math.abs(this.s.z - step.absY + 12) < 0.01) {
                             // move to next step
                             ++this.path.current;
-                            console.log('y')
                         }
                     }
                 } else {
@@ -61,6 +54,37 @@ Agent.prototype = {
                     this.state = this.STATE.USING;
                 }
             }
+        }
+    },
+    
+    goShop: function() {
+        var shops = gb.system.shops;
+        if (shops.length < 1) {
+            return;
+        }
+        var dest = shops[Math.floor(Math.random() * shops.length)];
+        if (dest) {
+            this.path = gb.system.pathFinder.findPath(
+                    gb.system.getRoadXy(this.s.x),
+                    gb.system.getRoadXy(this.s.z),
+                    dest.x, dest.y);
+            this.state = this.STATE.GOING;
+        }
+    },
+    
+    goAmuse: function() {
+        var amuse = gb.system.amusements;
+        if (amuse.length < 1) {
+            return;
+        }
+        var dest = amuse[Math.floor(Math.random() * amuse.length)];
+        if (dest.inPos) {
+            this.path = gb.system.pathFinder.findPath(
+                    gb.system.getRoadXy(this.s.x),
+                    gb.system.getRoadXy(this.s.z),
+                    dest.inPos.x, dest.inPos.y);
+            this.path.add(dest.entrance.x, dest.entrance.y);
+            this.state = this.STATE.GOING;
         }
     }
 };

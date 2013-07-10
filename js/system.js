@@ -23,7 +23,7 @@ System.prototype = {
     shopHeight: 1,
     shopPadding: 0.2,
     
-    amusementHeightMin: 0.5,
+    amusementHeightMin: 1,
     amusementHeightMax: 3,
     amusementPadding: 0.5,
     
@@ -97,6 +97,33 @@ System.prototype = {
                 this.graph.nodes[i][j].type = this.MAP_TYPES.AMUSEMENT;
             }
         }
+    },
+    
+    // set in position of last amusement
+    setAmuseIn: function(x, y) {
+        var len = this.amusements.length;
+        var mesh = new THREE.Mesh(new THREE.CubeGeometry(1, 0.1, 1),
+                this.amusements[len - 1].mesh.material);
+        mesh.position.set(x - Math.floor(gb.xCnt / 2), 1,
+                y - Math.floor(gb.yCnt / 2));
+        gb.scene.add(mesh);
+        
+        this.amusements[len - 1].setIn(x, y, mesh);
+        this.graph.nodes[x][y].type = this.MAP_TYPES.AMUSE_IN;
+    },
+    
+    isLegalAmuseIn: function(x, y) {
+        if (this.amusements.length === 0) {
+            return false;
+        }
+        var amuse = this.amusements[this.amusements.length - 1];
+        if (amuse !== undefined && (((x === amuse.x1 - 1 || x === amuse.x2 + 1)
+                && (y >= amuse.y1 && y <= amuse.y2))
+                || ((y === amuse.y1 - 1 || y === amuse.y2 + 1)
+                && (x >= amuse.x1 && x <= amuse.x2)))) {
+            return true;
+        }
+        return false;
     },
     
     addShop: function(x, y) {
@@ -178,6 +205,8 @@ System.prototype = {
         ROAD: 1, // open for path finder
         
         SHOP: 2,
-        AMUSEMENT: 3
+        
+        AMUSEMENT: 3,
+        AMUSE_IN: 3.1 // also open
     }
 };
