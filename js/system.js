@@ -31,7 +31,7 @@ System.prototype = {
     agentWidthMax: 0.25,
     agentHeightMin: 0.2,
     agentHeightMax: 0.6,
-    agentThickness: 0.1,
+    agentThickness: 0.15,
     groupMaxAgent: 6,
     agentMaxV: 0.02,
     agentMinV: 0.002,

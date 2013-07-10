@@ -41,20 +41,18 @@ Agent.prototype = {
                 var step = this.path.steps[this.path.current];
                 if (step) {
                     if (step.x) {
-                        var oldX = gb.system.getRoadXy(this.s.x);
                         this.s.x += this.maxV * step.x;
-                        var newX = gb.system.getRoadXy(this.s.x);
-                        if (oldX !== newX) {
+                        if (Math.abs(this.s.x - step.absX + 12) < 0.01) {
                             // move to next step
                             ++this.path.current;
+                            console.log('x')
                         }
                     } else {
-                        var oldY = gb.system.getRoadXy(this.s.z);
                         this.s.z += this.maxV * step.y;
-                        var newY = gb.system.getRoadXy(this.s.z);
-                        if (oldY !== newY) {
+                        if (Math.abs(this.s.z - step.absY + 12) < 0.01) {
                             // move to next step
                             ++this.path.current;
+                            console.log('y')
                         }
                     }
                 } else {
