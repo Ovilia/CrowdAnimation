@@ -7,7 +7,10 @@ function Agent(x, y, z, mesh, maxV) {
     this.s = this.mesh.position;
     
     this.maxV = maxV;
-    this.v = maxV;
+    this.v = {
+        x: maxV,
+        z: 0
+    };
     
     this.state = this.STATE.EXPLORING;
     
@@ -49,20 +52,31 @@ Agent.prototype = {
         if (this.path) {
             var step = this.path.steps[this.path.current];
             if (step) {
+                // update v
                 if (step.x) {
-                    this.s.x += this.maxV * step.x;
-                    if ((step.x > 0 && this.s.x >= step.absX - 12) ||
-                            (step.x < 0 && this.s.x <= step.absX - 12)) {
-                        // move to next step
-                        ++this.path.current;
-                    }
+                    this.v.x = step.x * this.maxV;
+                    this.v.z = 0;
                 } else {
-                    this.s.z += this.maxV * step.y;
-                    if ((step.y > 0 && this.s.z >= step.absY - 12) ||
-                            (step.y < 0 && this.s.z <= step.absY - 12)) {
-                        // move to next step
-                        ++this.path.current;
-                    }
+                    this.v.x = 0;
+                    this.v.z = step.y * this.maxV;
+                }
+                
+                // rotate agent
+                var alpha = (this.v.x === 0) ? Math.PI / 2
+                        : Math.atan(this.v.z / this.v.x);
+                this.mesh.rotation.y = alpha;
+                
+                // update s
+                this.s.x += this.v.x;
+                this.s.z += this.v.z;
+                
+                // check step
+                if ((step.x > 0 && this.s.x >= step.absX - 12) ||
+                        (step.x < 0 && this.s.x <= step.absX - 12) ||
+                        (step.y > 0 && this.s.z >= step.absY - 12) ||
+                        (step.y < 0 && this.s.z <= step.absY - 12)) {
+                    // move to next step
+                    ++this.path.current;
                 }
             } else {
                 // end of path
@@ -148,13 +162,31 @@ Agent.prototype = {
         }
     },
     
+    goWander: function() {
+        var map = gb.system.graph.nodes;
+        var cnt = 50; // try 50 times
+        for (var i = 0; i < cnt; ++i) {
+            var x = Math.floor(Math.random() * gb.xCnt);
+            var y = Math.floor(Math.random() * gb.yCnt);
+            if (map[x][y].type === gb.system.MAP_TYPES.ROAD) {
+                this.path = gb.system.pathFinder.findPath(
+                    gb.system.getRoadXy(this.s.x),
+                    gb.system.getRoadXy(this.s.z), x, y);
+                return;
+            }
+        }
+    },
+    
     computeWhereToGo: function() {
-        if (this.attr.hunger > this.findShopThreshold) {
+        if (this.attr.hunger > this.findShopThreshold || Math.random() < 0.1) {
             this.goShop(Shop.prototype.TYPE.FOOD);
-        } else if (this.attr.thirst > this.findShopThreshold) {
+        } else if (this.attr.thirst > this.findShopThreshold
+                || Math.random() < 0.1) {
             this.goShop(Shop.prototype.TYPE.DRINK);
-        } else {
+        } else if (Math.random() > 0.5) {
             this.goAmuse();
+        } else {
+            this.goWander();
         }
     }
 };
