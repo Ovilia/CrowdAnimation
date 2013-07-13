@@ -28,6 +28,7 @@ function Agent(x, y, z, mesh, maxV) {
         amusement: Math.random(),
         dizziness: Math.random()
     };
+    this.money = Math.ceil(Math.random() * 200);
     
     this.findShopThreshold = 0.4 + Math.random() * 0.4;
 }
@@ -38,7 +39,8 @@ Agent.prototype = {
         USING: 1,
         EXPLORING: 2,
         WAITING: 3,
-        LEAVING: 4
+        LEAVING: 4,
+        EXIT: 5
     },
     
     update: function() {
@@ -80,7 +82,11 @@ Agent.prototype = {
                 }
             } else {
                 // end of path
-                if (this.state === this.STATE.GOING) {
+                if (this.state === this.STATE.EXIT) {
+                    // exist
+                    gb.system.removeAgent(this);
+                } else if (this.state === this.STATE.GOING) {
+                    // enter shop or amusement
                     this.state = this.STATE.USING;
                     this.dest.agentIn(this);
                 } else {
@@ -95,6 +101,11 @@ Agent.prototype = {
     updateAttr: function(rigidAttr, price) {
         if (rigidAttr && rigidAttr.excitement) {
             // amusement
+            if (price > this.money) {
+                // cannot afford
+                return 0;
+            }
+            this.money -= price;
             this.attr.tiredness = Math.min(this.attr.tiredness
                     + (rigidAttr.excitement + rigidAttr.dizziness
                     - rigidAttr.amusement) * 0.1, 1);
@@ -113,6 +124,11 @@ Agent.prototype = {
         
         } else if (rigidAttr && rigidAttr.hunger) {
             // shop
+            if (price > this.money) {
+                // cannot afford
+                return 0;
+            }
+            this.money -= price;
             this.attr.hunger = Math.max(0, this.attr.hunger
                     + rigidAttr.hunger);
             this.attr.thirst = Math.min(1, Math.max(0, this.attr.thirst
@@ -176,13 +192,24 @@ Agent.prototype = {
         }
     },
     
+    goHome: function() {
+        this.path = gb.system.pathFinder.findPath(
+                gb.system.getRoadXy(this.s.x),
+                gb.system.getRoadXy(this.s.z), 0, 12);
+        this.state = this.STATE.EXIT;
+    },
+    
     computeWhereToGo: function() {
-        if (this.attr.hunger > this.findShopThreshold || Math.random() < 0.1) {
+        if ((this.attr.satisfactory < 0.2 || this.attr.tiredness > 0.9
+                || this.money < 10) && Math.random() > 0.1) {
+            this.goHome();
+        } else if (this.attr.hunger > this.findShopThreshold
+                || Math.random() < 0.1) {
             this.goShop(Shop.prototype.TYPE.FOOD);
         } else if (this.attr.thirst > this.findShopThreshold
                 || Math.random() < 0.1) {
             this.goShop(Shop.prototype.TYPE.DRINK);
-        } else if (Math.random() > 0.5) {
+        } else if (Math.random() > 0.25) {
             this.goAmuse();
         } else {
             this.goWander();

@@ -15,7 +15,11 @@ body {
     height: 100px;
     width: 100%;
     background-color: #666;
-    opacity: 0.6;
+    opacity: 0.2;
+}
+
+#ui:hover {
+    opacity: 1.0;
 }
 
 #operationDiv {

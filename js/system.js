@@ -55,20 +55,19 @@ System.prototype = {
         addAgent();
         
         // update agents
-        var len = this.agents.length;
-        for (var i = 0; i < len; ++i) {
-            this.agents[i].update();
+        for (var i = 0, len = this.agents.length; i < len; ++i) {
+            if (this.agents[i]) {
+                this.agents[i].update();
+            }
         }
         
         // update shops and amusements
-        len = this.shops.length;
-        for (var i = 0; i < len; ++i) {
+        for (var i = 0, len = this.shops.length; i < len; ++i) {
             if (this.shops[i]) {
                 this.shops[i].update();
             }
         }
-        len = this.amusements.length;
-        for (var i = 0; i < len; ++i) {
+        for (var i = 0, len = this.amusements.length; i < len; ++i) {
             if (this.amusements[i]) {
                 this.amusements[i].update();
             }
@@ -181,6 +180,17 @@ System.prototype = {
             this.agents.push(new Agent(x, y, z, mesh, v));
         }
         this.agentCnt += cnt;
+    },
+    
+    removeAgent: function(agent) {
+        for (var i = 0, len = this.agents.length; i < len; ++i) {
+            if (this.agents[i] && this.agents[i] === agent) {
+                gb.scene.remove(this.agents[i].mesh);
+                delete this.agents[i];
+                --this.agentCnt;
+                return;
+            }
+        }
     },
     
     clear: function() {
