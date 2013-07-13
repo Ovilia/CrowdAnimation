@@ -17,6 +17,9 @@ function System() {
     
     this.expectedAgentCnt = 0;
     this.agentCnt = 0;
+    
+    this.addAgentFrameMax = 500;
+    this.addAgentFrame = this.addAgentFrameMax;
 }
 
 System.prototype = {
@@ -33,8 +36,8 @@ System.prototype = {
     agentHeightMax: 0.6,
     agentThickness: 0.15,
     groupMaxAgent: 6,
-    agentMaxV: 0.02,
-    agentMinV: 0.002,
+    agentMaxV: 0.025,
+    agentMinV: 0.005,
     
     entrance: null,
     
@@ -75,9 +78,18 @@ System.prototype = {
         
         function addAgent() {
             // add new agent
-            if (that.agentCnt < that.expectedAgentCnt && Math.random() > 0.99) {
-                var cnt = Math.random() * that.groupMaxAgent;
-                that.addAgents(cnt);
+            if (that.agentCnt < that.expectedAgentCnt) {
+                ++that.addAgentFrame;
+                if (that.addAgentFrame > that.addAgentFrameMax) {
+                    if (Math.random() > 0.4) {
+                        that.addAgents(1);
+                    } else {
+                        var cnt = Math.ceil(Math.random() * that.groupMaxAgent);
+                        that.addAgents(cnt);
+                        console.log('add', cnt);
+                    }
+                    that.addAgentFrame = 0;
+                }
             }
         }
     },

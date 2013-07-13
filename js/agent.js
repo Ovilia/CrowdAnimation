@@ -79,6 +79,9 @@ Agent.prototype = {
                         (step.y < 0 && this.s.z <= step.absY - 12)) {
                     // move to next step
                     ++this.path.current;
+                    this.attr.tiredness += Math.random() * 0.005;
+                    this.attr.hunger += Math.random() * 0.005;
+                    this.attr.thirst += Math.random() * 0.005;
                 }
             } else {
                 // end of path
@@ -110,9 +113,9 @@ Agent.prototype = {
                     + (rigidAttr.excitement + rigidAttr.dizziness
                     - rigidAttr.amusement) * 0.1, 1);
             this.attr.hunger = Math.min(this.attr.hunger
-                    + (rigidAttr.excitement + Math.random()) * 0.2, 1);
+                    + (rigidAttr.excitement + Math.random()) * 0.05, 1);
             this.attr.thirst = Math.min(this.attr.thirst
-                    + (rigidAttr.excitement + Math.random()) * 0.2, 1);
+                    + (rigidAttr.excitement + Math.random()) * 0.05, 1);
             var satified = Math.min(1, Math.max(0, 1 - price / 200
                     - (Math.abs(this.favor.amusement - rigidAttr.amusement)
                     + Math.abs(this.favor.excitement - rigidAttr.excitement)
@@ -129,10 +132,12 @@ Agent.prototype = {
                 return 0;
             }
             this.money -= price;
-            this.attr.hunger = Math.max(0, this.attr.hunger
-                    + rigidAttr.hunger);
+            this.attr.hunger = Math.min(1, Math.max(0, this.attr.hunger
+                    + rigidAttr.hunger));
             this.attr.thirst = Math.min(1, Math.max(0, this.attr.thirst
                     + rigidAttr.thirst));
+            this.attr.tiredness = Math.min(1, Math.max(0, this.attr.tiredness
+                    + rigidAttr.tiredness));
             var satified = Math.min(1, Math.max(0,
                     -(rigidAttr.hunger + rigidAttr.thirst) * 2 - price / 100
                     + Math.random() * 0.25));
@@ -204,10 +209,10 @@ Agent.prototype = {
                 || this.money < 10) && Math.random() > 0.1) {
             this.goHome();
         } else if (this.attr.hunger > this.findShopThreshold
-                || Math.random() < 0.1) {
+                || Math.random() < 0.05) {
             this.goShop(Shop.prototype.TYPE.FOOD);
         } else if (this.attr.thirst > this.findShopThreshold
-                || Math.random() < 0.1) {
+                || Math.random() < 0.05) {
             this.goShop(Shop.prototype.TYPE.DRINK);
         } else if (Math.random() > 0.25) {
             this.goAmuse();

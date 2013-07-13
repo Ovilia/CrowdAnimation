@@ -276,8 +276,8 @@ function mouseEvent() {
     })
 
     $('#addAgentsBtn').click(function() {
-        //gb.system.expectedAgentCnt += 5;
-        gb.system.addAgents(1);
+        gb.system.expectedAgentCnt += 10;
+        //gb.system.addAgents(1);
     })
 }
 

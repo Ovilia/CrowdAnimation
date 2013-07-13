@@ -10,7 +10,7 @@ function Rigid(height, mesh) {
     this.agents = [];
     this.agentCnt = 0;
     
-    this.maxAgentFrames = 500;
+    this.maxAgentFrames = 300;
     
     this.price = 0;
     this.attr = null;
@@ -79,7 +79,7 @@ function Amusement(x1, y1, x2, y2, height, mesh) {
     this.entrance = null;
     
     this.agents = [];
-    this.maxAgentFrames = 1000;
+    this.maxAgentFrames = 500;
     
     this.price = Math.ceil(Math.random() * 25);
     this.attr = {
@@ -146,13 +146,15 @@ function Shop(x, y, height, mesh) {
         this.type = this.TYPE.DRINK;
         this.attr = {
             thirst: -0.75,
-            hunger: -Math.random() * 0.1
+            hunger: -Math.random() * 0.1,
+            tiredness: -Math.random() * 0.2
         };
     } else {
         this.type = this.TYPE.FOOD;
         this.attr = {
             thirst: Math.random() * 0.2,
-            hunger: -Math.random() * 0.4 - 0.5
+            hunger: -Math.random() * 0.4 - 0.5,
+            tiredness: -Math.random() * 0.2
         };
     }
     
