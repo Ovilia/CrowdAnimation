@@ -80,14 +80,14 @@ Agent.prototype = {
                 }
             } else {
                 // end of path
-                this.path = null;
                 if (this.state === this.STATE.GOING) {
                     this.state = this.STATE.USING;
                     this.dest.agentIn(this);
                 } else {
                     this.state = this.STATE.EXPLORING;
                     this.dest = null;
-                }
+                }                 
+                this.path = null;
             }
         }
     },
@@ -98,7 +98,6 @@ Agent.prototype = {
             this.attr.tiredness = Math.min(this.attr.tiredness
                     + (rigidAttr.excitement + rigidAttr.dizziness
                     - rigidAttr.amusement) * 0.1, 1);
-            this.v = this.maxV * this.attr.tiredness;
             this.attr.hunger = Math.min(this.attr.hunger
                     + (rigidAttr.excitement + Math.random()) * 0.2, 1);
             this.attr.thirst = Math.min(this.attr.thirst

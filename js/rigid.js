@@ -19,9 +19,15 @@ function Rigid(height, mesh) {
 
 Rigid.prototype = {
     agentIn: function(agent) {
+        var lastStep = agent.path.steps.length > 1 ? agent.path.steps[
+                agent.path.steps.length - 2] : {absX: null, absY: null};
         this.agents.push({
             agent: agent,
-            frames: 0
+            frames: 0,
+            agentIn: {
+                x: lastStep.absX,
+                y: lastStep.absY
+            }
         });
     },
     
@@ -31,7 +37,8 @@ Rigid.prototype = {
                 ++this.agents[i].frames;
                 if (this.agents[i].frames > this.maxAgentFrames) {
                     // leave
-                    this.agents[i].agent.path = this.getOutPath();
+                    this.agents[i].agent.path =
+                            this.getOutPath(this.agents[i].agentIn);
                     this.agents[i].agent.state
                             = this.agents[i].agent.STATE.LEAVING;
                     // set attr
@@ -161,18 +168,6 @@ Shop.prototype.TYPE = {
     DRINK: 1
 };
 
-Shop.prototype.getOutPath = function() {
-    var map = gb.system.graph.nodes;
-    if (map[this.x - 1][this.y].type === gb.system.MAP_TYPES.ROAD) {
-        var path = [{x: this.x - 1, y: this.y}];
-    } else if (map[this.x][this.y - 1].type === gb.system.MAP_TYPES.ROAD) {
-        var path = [{x: this.x, y: this.y - 1}];
-    } else if (map[this.x + 1][this.y].type === gb.system.MAP_TYPES.ROAD) {
-        var path = [{x: this.x + 1, y: this.y}];
-    } else if (map[this.x][this.y + 1].type === gb.system.MAP_TYPES.ROAD) {
-        var path = [{x: this.x, y: this.y + 1}];
-    } else {
-        console.error('Error in getOutPath!');
-    }
-    return new Path(this.x, this.y, path);
+Shop.prototype.getOutPath = function(agentIn) {
+    return new Path(this.x, this.y, [agentIn]);
 };
