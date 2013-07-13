@@ -7,11 +7,26 @@ function Agent(x, y, z, mesh, maxV) {
     this.s = this.mesh.position;
     
     this.maxV = maxV;
+    this.v = maxV;
     
     this.state = this.STATE.EXPLORING;
     
     this.dest = null;
     this.path = null;
+    
+    this.attr = {
+        tiredness: 0,
+        hunger: 0,
+        thirst: 0,
+        satisfactory: 0.6
+    };
+    this.favor = {
+        excitement: Math.random(),
+        amusement: Math.random(),
+        dizziness: Math.random()
+    };
+    
+    this.findShopThreshold = 0.4 + Math.random() * 0.4;
 }
 
 Agent.prototype = {
@@ -27,11 +42,7 @@ Agent.prototype = {
         if (this.state === this.STATE.EXPLORING) {
             if (this.path === null) {
                 // compute path
-                if (Math.random() > 0.4) {
-                    this.goAmuse();
-                } else {
-                    this.goShop();
-                }
+                this.computeWhereToGo();
             }
         }
         // going along the path
@@ -67,13 +78,50 @@ Agent.prototype = {
         }
     },
     
-    goShop: function() {
+    updateAttr: function(rigidAttr, price) {
+        if (rigidAttr && rigidAttr.excitement) {
+            // amusement
+            this.attr.tiredness = Math.min(this.attr.tiredness
+                    + (rigidAttr.excitement + rigidAttr.dizziness
+                    - rigidAttr.amusement) * 0.1, 1);
+            this.v = this.maxV * this.attr.tiredness;
+            this.attr.hunger = Math.min(this.attr.hunger
+                    + (rigidAttr.excitement + Math.random()) * 0.2, 1);
+            this.attr.thirst = Math.min(this.attr.thirst
+                    + (rigidAttr.excitement + Math.random()) * 0.2, 1);
+            var satified = Math.min(1, Math.max(0, 1 - price / 200
+                    - (Math.abs(this.favor.amusement - rigidAttr.amusement)
+                    + Math.abs(this.favor.excitement - rigidAttr.excitement)
+                    + Math.abs(this.favor.dizziness - rigidAttr.dizziness))
+                    / 5 + Math.random() * 0.25));
+            this.attr.satisfactory = this.attr.satisfactory * 0.8
+                    + satified * 0.2;
+            return satified;
+        
+        } else if (rigidAttr && rigidAttr.hunger) {
+            // shop
+            this.attr.hunger = Math.max(0, this.attr.hunger
+                    + rigidAttr.hunger);
+            this.attr.thirst = Math.min(1, Math.max(0, this.attr.thirst
+                    + rigidAttr.thirst));
+            var satified = Math.min(1, Math.max(0,
+                    -(rigidAttr.hunger + rigidAttr.thirst) * 2 - price / 100
+                    + Math.random() * 0.25));
+            this.attr.satisfactory = this.attr.satisfactory * 0.8
+                    + satified * 0.2;
+            return satified;
+        } else {
+            return 0;
+        }
+    },
+    
+    goShop: function(shopType) {
         var shops = gb.system.shops;
         if (shops.length < 1) {
             return;
         }
         var dest = shops[Math.floor(Math.random() * shops.length)];
-        if (dest) {
+        if (dest && dest.type === shopType) {
             this.path = gb.system.pathFinder.findPath(
                     gb.system.getRoadXy(this.s.x),
                     gb.system.getRoadXy(this.s.z),
@@ -97,6 +145,16 @@ Agent.prototype = {
             this.path.add(dest.entrance.x, dest.entrance.y);
             this.dest = dest;
             this.state = this.STATE.GOING;
+        }
+    },
+    
+    computeWhereToGo: function() {
+        if (this.attr.hunger > this.findShopThreshold) {
+            this.goShop(Shop.prototype.TYPE.FOOD);
+        } else if (this.attr.thirst > this.findShopThreshold) {
+            this.goShop(Shop.prototype.TYPE.DRINK);
+        } else {
+            this.goAmuse();
         }
     }
 };

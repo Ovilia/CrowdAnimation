@@ -11,6 +11,10 @@ function Rigid(height, mesh) {
     this.agentCnt = 0;
     
     this.maxAgentFrames = 500;
+    
+    this.price = 0;
+    this.attr = null;
+    this.satifactories = [];
 }
 
 Rigid.prototype = {
@@ -26,9 +30,14 @@ Rigid.prototype = {
             if (this.agents[i]) {
                 ++this.agents[i].frames;
                 if (this.agents[i].frames > this.maxAgentFrames) {
+                    // leave
                     this.agents[i].agent.path = this.getOutPath();
                     this.agents[i].agent.state
                             = this.agents[i].agent.STATE.LEAVING;
+                    // set attr
+                    this.satifactories.push(this.agents[i].agent.updateAttr(
+                            this.attr, this.price));
+                    // remove
                     delete this.agents[i];
                     --this.agentCnt;
                 }
@@ -62,7 +71,17 @@ function Amusement(x1, y1, x2, y2, height, mesh) {
     this.inMesh = null;
     this.entrance = null;
     
+    this.agents = [];
     this.maxAgentFrames = 1000;
+    
+    this.price = Math.ceil(Math.random() * 25);
+    this.attr = {
+        excitement: Math.random(),
+        amusement: Math.random(),
+        dizziness: Math.random()
+    };
+    
+    this.satifactories = [];
 }
 
 Amusement.prototype = new Rigid();
@@ -113,7 +132,26 @@ function Shop(x, y, height, mesh) {
     
     this.mesh = mesh;
     
-    //this.type = Math.floor(Math.random() * this.protptype.TYPE.length);
+    this.price = Math.ceil(Math.random() * 15);
+    
+    // type and attr
+    if (Math.random() > 0.5) {
+        this.type = this.TYPE.DRINK;
+        this.attr = {
+            thirst: -0.75,
+            hunger: -Math.random() * 0.1
+        };
+    } else {
+        this.type = this.TYPE.FOOD;
+        this.attr = {
+            thirst: Math.random() * 0.2,
+            hunger: -Math.random() * 0.4 - 0.5
+        };
+    }
+    
+    this.agents = [];
+    
+    this.satifactories = [];
 }
 
 Shop.prototype = new Rigid();
