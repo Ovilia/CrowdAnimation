@@ -199,10 +199,10 @@ System.prototype = {
                         = this.MAP_TYPES.NONE;
                         
                 var agents = this.shops[i].agents;
-                for (var i = 0, len = agents.length; i < len; ++i) {
-                    if (agents[i]) {
-                        agents[i].path = null;
-                        agents[i].state = agents[i].STATE.EXPLORING;
+                for (var j = 0, len = agents.length; j < len; ++j) {
+                    if (agents[j]) {
+                        agents[j].path = null;
+                        agents[j].state = agents[i].STATE.EXPLORING;
                     }
                 }
                 
@@ -446,7 +446,8 @@ System.prototype = {
     },
     
     agentInfo: function(agent) {
-        return 'Tiredness: ' + Math.ceil(agent.attr.tiredness * 100) + '%, '
+        return 'Money: ' + agent.money + ', Tiredness: '
+                + Math.ceil(agent.attr.tiredness * 100) + '%, '
                 + 'Hunger: ' + Math.ceil(agent.attr.hunger * 100) + '%, '
                 + 'Thirst: ' + Math.ceil(agent.attr.thirst * 100) + '%, '
                 + 'Satisfactory: ' + Math.ceil(agent.attr.satisfactory * 100)

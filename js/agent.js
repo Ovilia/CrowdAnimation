@@ -38,6 +38,8 @@ function Agent(x, y, z, mesh, maxV) {
     this.money = Math.ceil(Math.random() * 200);
     
     this.findShopThreshold = 0.4 + Math.random() * 0.4;
+    
+    this.history = [];
 }
 
 Agent.prototype = {
@@ -172,13 +174,24 @@ Agent.prototype = {
             return;
         }
         var dest = shops[Math.floor(Math.random() * shops.length)];
-        if (dest && dest.type === shopType) {
+        // 80% likely not to go somewhere he has been
+        if (dest && dest.type === shopType
+                && ($.inArray(dest, this.history) < 0 || Math.random() > 0.8)) {
+            var dx = gb.system.getRoadXy(dest.x);
+            var dy = gb.system.getRoadXy(dest.y);
+            if (Math.abs(dx - this.s.x) > 5 || Math.abs(dy - this.s.z) > 5) {
+                // too far
+                return;
+            }
             this.path = gb.system.pathFinder.findPath(
                     gb.system.getRoadXy(this.s.x),
                     gb.system.getRoadXy(this.s.z),
                     dest.x, dest.y);
-            this.dest = dest;
-            this.state = this.STATE.GOING;
+            if (this.path) {
+                this.dest = dest;
+                this.state = this.STATE.GOING;
+                this.history.push(dest);
+            }
         }
     },
     
@@ -197,6 +210,7 @@ Agent.prototype = {
                 this.path.add(dest.entrance.x, dest.entrance.y);
                 this.dest = dest;
                 this.state = this.STATE.GOING;
+                this.history.push(dest);
             }
         }
     },
