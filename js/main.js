@@ -165,12 +165,16 @@ function update() {
     // mouse.js
     checkMoveCamera();
     
-    if (gb.mouse.mouse2d !== null && gb.mouse.state !== gb.mouse.STATE.NONE) {
+    if (gb.mouse.mouse2d !== null) {
         gb.raycaster = gb.projector.pickingRay(
                 gb.mouse.mouse2d.clone(), gb.camera);
     }
     
     gb.system.update();
+    
+    if (gb.mouse.ray.agent) {
+        $('#agentInfo').text(gb.system.agentInfo(gb.mouse.ray.agent));
+    }
 }
 
 function render() {

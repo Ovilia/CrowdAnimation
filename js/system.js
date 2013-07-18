@@ -23,6 +23,8 @@ function System() {
 }
 
 System.prototype = {
+    useCd: false,
+    
     shopHeight: 1,
     shopPadding: 0.2,
     
@@ -121,6 +123,30 @@ System.prototype = {
         }
     },
     
+    removeAmusement: function(mesh) {
+        for (var i = 0, len = this.amusements.length; i < len; ++i) {
+            if (this.amusements[i] && this.amusements[i].mesh === mesh) {
+                var minX = this.amusements[i].x1;
+                var maxX = this.amusements[i].x2;
+                var minY = this.amusements[i].y1;
+                var maxY = this.amusements[i].y2;
+                for (var k = minX; k <= maxX; ++k) {
+                    for (var j = minY; j <= maxY; ++j) {
+                        this.graph.nodes[k][j].type = this.MAP_TYPES.NONE;
+                    }
+                }
+                this.graph.nodes[this.amusements[i].inPos.x]
+                        [this.amusements[i].inPos.y].type = this.MAP_TYPES.NONE;
+                
+                gb.scene.remove(this.amusements[i].mesh);
+                gb.scene.remove(this.amusements[i].inMesh);
+                delete this.amusements[i];
+                --this.amusementCnt;
+                return;
+            }
+        }
+    },
+    
     // set in position of last amusement
     setAmuseIn: function(x, y) {
         var len = this.amusements.length;
@@ -166,6 +192,28 @@ System.prototype = {
         this.graph.nodes[x][y].type = this.MAP_TYPES.SHOP;
     },
     
+    removeShop: function(mesh) {
+        for (var i = 0, len = this.shops.length; i < len; ++i) {
+            if (this.shops[i] && this.shops[i].mesh === mesh) {
+                this.graph.nodes[this.shops[i].x][this.shops[i].y].type
+                        = this.MAP_TYPES.NONE;
+                        
+                var agents = this.shops[i].agents;
+                for (var i = 0, len = agents.length; i < len; ++i) {
+                    if (agents[i]) {
+                        agents[i].path = null;
+                        agents[i].state = agents[i].STATE.EXPLORING;
+                    }
+                }
+                
+                gb.scene.remove(this.shops[i].mesh);
+                delete this.shops[i];
+                --this.shopCnt;
+                return;
+            }
+        }
+    },
+    
     // add a group of agents
     addAgents: function(cnt) {
         var color = new THREE.Color();
@@ -191,9 +239,9 @@ System.prototype = {
         this.agentCnt += cnt;
     },
     
-    removeAgent: function(agent) {
+    removeAgent: function(mesh) {
         for (var i = 0, len = this.agents.length; i < len; ++i) {
-            if (this.agents[i] && this.agents[i] === agent) {
+            if (this.agents[i] && this.agents[i].mesh === mesh) {
                 gb.scene.remove(this.agents[i].mesh);
                 delete this.agents[i];
                 --this.agentCnt;
@@ -245,66 +293,73 @@ System.prototype = {
         }
         
         // check stride
-        for (var i = 0, len = this.agents.length; i < len; ++i) {
-            if (this.agents[i] && this.agents[i].path
-                    && this.agents[i].strideSave === false) {
-                var a = this.agents[i];
-                var aStep = a.path.steps[a.path.current];
-                if (!aStep) {
-                    continue;
-                }
-                
-                for (var j = i + 1, len = this.agents.length; j < len; ++j) {
-                    var b = this.agents[j];
-                    if (!b || !b.path || !b.path.steps[b.path.current]
-                            || b.strideSave) {
+        if (this.useCd) {
+            for (var i = 0, len = this.agents.length; i < len; ++i) {
+                if (this.agents[i] && this.agents[i].path
+                        && this.agents[i].strideSave === false) {
+                    var a = this.agents[i];
+                    var aStep = a.path.steps[a.path.current];
+                    if (!aStep) {
                         continue;
                     }
                     
-                    // rough detection
-                    var ab = new Vec2(a.s.x - b.s.x, a.s.z - b.s.z);
-                    if (ab.modulus() > (a.maxV + b.maxV) * a.STRIDE_RATIO) {
-                        continue;
-                    }
-                    
-                    // check if stride collide
-                    var decreaseI =
-                            a.distanceToNextStep() > b.distanceToNextStep();
-                    var cnt = 0;
-                    while (strideCollide(a.stride, b.stride)) {
-                        ++cnt;
-                        if ((a.v.modulus() < this.stopSpeed
-                                && b.v.modulus() < this.stopSpeed)
-                                || (ab.modulus() < this.agentWidthMax)) {
-                            a.v = new Vec2(0, 0);
-                            b.v = new Vec2(ab.y, ab.x).normalize().scale(b.maxV);
-                            a.updateStride(a.v.x, a.v.y);
-                            b.updateStride(b.v.x, b.v.y);
-                            a.strideSave = true;
-                            a.strideSave = true;
-                            break;
+                    for (var j = i + 1, len = this.agents.length;
+                            j < len; ++j) {
+                        var b = this.agents[j];
+                        if (!b || !b.path || !b.path.steps[b.path.current]
+                                || b.strideSave) {
+                            continue;
                         }
-                        if (decreaseI) {
-                            a.v.x = a.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
-                            a.v.y = a.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
-                            if (cnt < 8) {
-                                a.v = a.v.rotate(Math.PI / 4);
-                            }
-                            a.updateStride(a.v.x, a.v.y);
-                        } else {
-                            b.v.x = b.v.x < this.stopSpeed ? 0 : b.v.x * 0.8;
-                            b.v.y = b.v.y < this.stopSpeed ? 0 : b.v.y * 0.8;
-                            if (cnt < 8) {
-                                b.v = b.v.rotate(Math.PI / 4);
-                            }
-                            b.updateStride(b.v.x, b.v.y);
+                        
+                        // rough detection
+                        var ab = new Vec2(a.s.x - b.s.x, a.s.z - b.s.z);
+                        if (ab.modulus() > (a.maxV + b.maxV) * a.STRIDE_RATIO) {
+                            continue;
                         }
-                        decreaseI = !decreaseI;
+                        
+                        // check if stride collide
+                        var decreaseI =
+                                a.distanceToNextStep() > b.distanceToNextStep();
+                        var cnt = 0;
+                        while (strideCollide(a.stride, b.stride)) {
+                            ++cnt;
+                            if ((a.v.modulus() < this.stopSpeed
+                                    && b.v.modulus() < this.stopSpeed)
+                                    || (ab.modulus() < this.agentWidthMax)) {
+                                a.v = new Vec2(0, 0);
+                                b.v = new Vec2(ab.y, ab.x).normalize()
+                                        .scale(b.maxV);
+                                a.updateStride(a.v.x, a.v.y);
+                                b.updateStride(b.v.x, b.v.y);
+                                a.strideSave = true;
+                                a.strideSave = true;
+                                break;
+                            }
+                            if (decreaseI) {
+                                a.v.x = a.v.x < this.stopSpeed ?
+                                        0 : a.v.x * 0.8;
+                                a.v.y = a.v.y < this.stopSpeed ?
+                                        0 : a.v.y * 0.8;
+                                if (cnt < 8) {
+                                    a.v = a.v.rotate(Math.PI / 4);
+                                }
+                                a.updateStride(a.v.x, a.v.y);
+                            } else {
+                                b.v.x = b.v.x < this.stopSpeed ?
+                                        0 : b.v.x * 0.8;
+                                b.v.y = b.v.y < this.stopSpeed ?
+                                        0 : b.v.y * 0.8;
+                                if (cnt < 8) {
+                                    b.v = b.v.rotate(Math.PI / 4);
+                                }
+                                b.updateStride(b.v.x, b.v.y);
+                            }
+                            decreaseI = !decreaseI;
+                        }
                     }
                 }
-            }
+            }   
         }
-        
         
         // update s
         for (var i = 0, len = this.agents.length; i < len; ++i) {
@@ -388,6 +443,28 @@ System.prototype = {
             }
             return true;
         }
+    },
+    
+    agentInfo: function(agent) {
+        return 'Tiredness: ' + Math.ceil(agent.attr.tiredness * 100) + '%, '
+                + 'Hunger: ' + Math.ceil(agent.attr.hunger * 100) + '%, '
+                + 'Thirst: ' + Math.ceil(agent.attr.thirst * 100) + '%, '
+                + 'Satisfactory: ' + Math.ceil(agent.attr.satisfactory * 100)
+                + '%';
+    },
+    
+    shopInfo: function(shop) {
+        return 'Price: ' + shop.price + ', Tiredness: '
+                + Math.ceil(shop.attr.tiredness * 100) + '%, '
+                + 'Hunger: ' + Math.ceil(shop.attr.hunger * 100) + '%, '
+                + 'Thirst: ' + Math.ceil(shop.attr.thirst * 100) + '%';
+    },
+    
+    amusementInfo: function(amuse) {
+        return 'Price: ' + amuse.price + ', Excitement: '
+                + Math.ceil(amuse.attr.excitement * 100) + '%, '
+                + 'Amusement: ' + Math.ceil(amuse.attr.amusement * 100) + '%, '
+                + 'Dizziness: ' + Math.ceil(amuse.attr.dizziness * 100) + '%';
     },
     
     MAP_TYPES: {

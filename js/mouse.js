@@ -135,7 +135,7 @@ function mouseEvent() {
                         * gb.mouse.moveViewDragSpeed);
             }
             
-        } else if (gb.mouse.state !== gb.mouse.STATE.NONE) {
+        } else if (gb.mouse.state !== gb.mouse.STATE.NONE && gb.raycaster) {
             // adding something
             var intersects = gb.raycaster.intersectObjects(gb.plane.meshes);
             if (intersects.length > 0) {
@@ -198,8 +198,73 @@ function mouseEvent() {
         gb.mouse.isPressed = false;
         
         if (e.which === 1) {
-            if (gb.mouse.state !== gb.mouse.STATE.NONE
-                    && gb.mouse.ray.road.start.isLegal) {
+            if (gb.mouse.state === gb.mouse.STATE.NONE && gb.raycaster) {
+                var intersects = gb.raycaster.intersectObjects(
+                        gb.scene.children);
+                if (intersects.length > 0) {
+                    // check if is shop
+                    for (var i = 0, len = gb.system.shops.length;
+                            i < len; ++i) {
+                        if (gb.system.shops[i] && gb.system.shops[i].mesh
+                                === intersects[0].object) {
+                            gb.mouse.ray.shop = gb.system.shops[i];
+                            gb.mouse.ray.agent = gb.mouse.ray.amusement = null;
+                            
+                            $('#shopColor').css('background-color',
+                                    gb.system.shops[i].mesh.material
+                                    .color.getStyle());
+                            $('#shopInfo').text(gb.system.shopInfo(
+                                gb.mouse.ray.shop));
+                            $('#amusement,#agent').hide();
+                            $('#shop').show();
+                            return;
+                        }
+                    }
+                    // check if is amusement
+                    for (var i = 0, len = gb.system.amusements.length;
+                            i < len; ++i) {
+                        if (gb.system.amusements[i]
+                                && (gb.system.amusements[i].mesh
+                                === intersects[0].object
+                                || gb.system.amusements[i].inMesh
+                                === intersects[0].object)) {
+                            gb.mouse.ray.amusement = gb.system.amusements[i];
+                            gb.mouse.ray.agent = gb.mouse.ray.shop = null;
+                            
+                            $('#amusementColor').css('background-color',
+                                    gb.system.amusements[i].mesh.material
+                                    .color.getStyle());
+                            $('#amusementInfo').text(gb.system.amusementInfo(
+                                    gb.mouse.ray.amusement));
+                            $('#shop,#agent').hide();
+                            $('#amusement').show();
+                            return;
+                        }
+                    }
+                    // check if is agent
+                    for (var i = 0, len = gb.system.agents.length;
+                            i < len; ++i) {
+                        if (gb.system.agents[i] && gb.system.agents[i].mesh
+                                === intersects[0].object) {
+                            gb.mouse.ray.agent = gb.system.agents[i];
+                            gb.mouse.ray.shop = gb.mouse.ray.amusement = null;
+                            
+                            $('#agentColor').css('background-color',
+                                    gb.system.agents[i].mesh.material
+                                    .color.getStyle());
+                            $('#agentInfo').text(gb.system.agentInfo(
+                                    gb.mouse.ray.agent));
+                            $('#shop,#amusement').hide();
+                            $('#agent').show();
+                            return;
+                        }
+                    }
+                    // nothing selected
+                    gb.mouse.ray.agent = gb.mouse.ray.shop
+                            = gb.mouse.ray.amusement = null;
+                    $('#shop,#amusement,#agent').hide();
+                }
+            } else if (gb.mouse.ray.road.start.isLegal) {
                 if (gb.mouse.state === gb.mouse.STATE.ADD_SHOP) {
                     // add shop
                     gb.system.addShop(gb.mouse.ray.road.start.x,
@@ -273,12 +338,33 @@ function mouseEvent() {
     
     $('#addRoadBtn').click(function() {
         gb.mouse.state = gb.mouse.STATE.ADD_ROAD;
-    })
+    });
 
     $('#addAgentsBtn').click(function() {
         //gb.system.expectedAgentCnt += 10;
         gb.system.addAgents(1);
-    })
+    });
+    
+    $('#removeShop').click(function() {
+        if (gb.mouse.ray.shop) {
+            gb.system.removeShop(gb.mouse.ray.shop.mesh);
+            $('#shop').hide();
+        }
+    });
+    
+    $('#removeAmusement').click(function() {
+        if (gb.mouse.ray.amusement) {
+            gb.system.removeAmusement(gb.mouse.ray.amusement.mesh);
+        }
+        $('#amusement').hide();
+    });
+    
+    $('#removeAgent').click(function() {
+        if (gb.mouse.ray.agent) {
+            gb.system.removeAgent(gb.mouse.ray.agent.mesh);
+        }
+        $('#agent').hide();
+    });
 }
 
 function checkMoveCamera() {

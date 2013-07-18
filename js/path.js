@@ -9,8 +9,12 @@ PathFinder.prototype = {
     },
     
     findPath: function(startX, startY, desX, desY) {
-        var path = astar.search(this.graph.nodes, this.graph.nodes[startX][startY],
+        var path = astar.search(this.graph.nodes,
+                this.graph.nodes[startX][startY],
                 this.graph.nodes[desX][desY]);
+        if (path.length === 0) {
+            return null;
+        }
         return new Path(startX, startY, path);
     }
 };

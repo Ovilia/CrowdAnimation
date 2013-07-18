@@ -77,7 +77,7 @@ Agent.prototype = {
                 // end of path
                 if (this.state === this.STATE.EXIT) {
                     // exist
-                    gb.system.removeAgent(this);
+                    gb.system.removeAgent(this.mesh);
                 } else if (this.state === this.STATE.GOING) {
                     // enter shop or amusement
                     this.state = this.STATE.USING;
@@ -188,14 +188,16 @@ Agent.prototype = {
             return;
         }
         var dest = amuse[Math.floor(Math.random() * amuse.length)];
-        if (dest.inPos) {
+        if (dest && dest.inPos) {
             this.path = gb.system.pathFinder.findPath(
                     gb.system.getRoadXy(this.s.x),
                     gb.system.getRoadXy(this.s.z),
                     dest.inPos.x, dest.inPos.y);
-            this.path.add(dest.entrance.x, dest.entrance.y);
-            this.dest = dest;
-            this.state = this.STATE.GOING;
+            if (this.path) {
+                this.path.add(dest.entrance.x, dest.entrance.y);
+                this.dest = dest;
+                this.state = this.STATE.GOING;
+            }
         }
     },
     
