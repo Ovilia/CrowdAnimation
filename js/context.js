@@ -1,7 +1,0 @@
-function Context() {
-    
-}
-
-Context.prototype = {
-    
-};

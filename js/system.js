@@ -39,6 +39,8 @@ System.prototype = {
     agentMaxV: 0.025,
     agentMinV: 0.005,
     
+    stopSpeed: 0.0001,
+    
     entrance: null,
     
     init: function() {
@@ -58,11 +60,7 @@ System.prototype = {
         addAgent();
         
         // update agents
-        for (var i = 0, len = this.agents.length; i < len; ++i) {
-            if (this.agents[i]) {
-                this.agents[i].update();
-            }
-        }
+        this.updateAgent();
         
         // update shops and amusements
         for (var i = 0, len = this.shops.length; i < len; ++i) {
@@ -86,7 +84,6 @@ System.prototype = {
                     } else {
                         var cnt = Math.ceil(Math.random() * that.groupMaxAgent);
                         that.addAgents(cnt);
-                        console.log('add', cnt);
                     }
                     that.addAgentFrame = 0;
                 }
@@ -233,6 +230,136 @@ System.prototype = {
     
     getRoadId: function(x, y) {
         return Math.floor(x + 12.5) + Math.floor(y + 12.5) * gb.yCnt;
+    },
+    
+    getRoadPos: function(x) {
+        return x - 12.5;
+    },
+    
+    updateAgent: function() {
+        // update v and stride
+        for (var i = 0, len = this.agents.length; i < len; ++i) {
+            if (this.agents[i]) {
+                this.agents[i].updateV();
+            }
+        }
+        
+        // check stride
+        for (var i = 0, len = this.agents.length; i < len; ++i) {
+            if (this.agents[i] && this.agents[i].path) {
+                var a = this.agents[i];
+                var aStep = a.path.steps[a.path.current];
+                if (!aStep) {
+                    continue;
+                }
+                
+                for (var j = i + 1, len = this.agents.length; j < len; ++j) {
+                    var b = this.agents[j];
+                    if (!b || !b.path || !b.path.steps[b.path.current]) {
+                        continue;
+                    }
+                    // check if stride collide
+                    while (strideCollide(a.stride, b.stride)
+                            && (a.v.modulus() > this.stopSpeed
+                            || b.v.modulus() > this.stopSpeed)) {
+                        if (a.distanceToNextStep() > b.distanceToNextStep()) {
+                            // decrease v of the one farther from destination
+                            a.v.x = a.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
+                            a.v.y = a.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
+                            console.log('decrease', i);
+                        } else {
+                            b.v.x = b.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
+                            b.v.y = b.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
+                            console.log('decrease', j);
+                        }
+                    }
+                }
+            }
+        }
+        
+        
+        // update s
+        for (var i = 0, len = this.agents.length; i < len; ++i) {
+            if (this.agents[i] && this.agents[i].path) {
+                var a = this.agents[i];
+                var step = a.path.steps[a.path.current];
+                
+                // rotate agent
+                var alpha = (a.v.x === 0) ? Math.PI / 2
+                        : Math.atan(a.v.y / a.v.x);
+                a.mesh.rotation.y = alpha;
+                
+                // update s
+                a.s.x += a.v.x;
+                a.s.z += a.v.y;
+                a.strideMesh.position.x = a.s.x + (a.stride.length - a.x) / 2;
+                a.strideMesh.position.z = a.s.z;
+                
+                // check step
+                if ((step.x > 0 && a.s.x >= step.absX - 12) ||
+                        (step.x < 0 && a.s.x <= step.absX - 12) ||
+                        (step.y > 0 && a.s.z >= step.absY - 12) ||
+                        (step.y < 0 && a.s.z <= step.absY - 12)) {
+                    // move to next step
+                    ++a.path.current;
+                    a.attr.tiredness += Math.random() * 0.005;
+                    a.attr.hunger += Math.random() * 0.005;
+                    a.attr.thirst += Math.random() * 0.005;
+                }
+            }
+        }
+        
+        function strideCollide(aStride, bStride) {
+        
+            // check collision with one vector and (4 * 2) points
+            // a and b are arrays of 4 vectors each
+            function check(vec, a, b) {
+                // min and max projection onto vec
+                function minMaxProjection(vec, arr) {
+                    var ans = {
+                        minX: Infinity,
+                        maxX: -Infinity,
+                        minY: Infinity,
+                        maxY: -Infinity
+                    };
+                    for (var i = 0; i < 4; ++i) {
+                        var pro = vec.project(arr[i]);
+                        if (!pro) {
+                            continue;
+                        }
+                        if (pro.x > ans.maxX) ans.maxX = pro.x;
+                        if (pro.x < ans.minX) ans.minX = pro.x;
+                        if (pro.y > ans.maxY) ans.maxY = pro.y;
+                        if (pro.y < ans.minY) ans.minY = pro.y;
+                    }
+                    return ans;
+                }
+                
+                var aMinMax = minMaxProjection(vec, a);
+                var bMinMax = minMaxProjection(vec, b);
+                var threshold = 0.0001;
+                if (bMinMax.minX - aMinMax.maxX > threshold
+                        || bMinMax.minY - aMinMax.maxY > threshold
+                        || aMinMax.minX - bMinMax.maxX > threshold
+                        || aMinMax.minY - bMinMax.maxY > threshold) {
+                    // no collision
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            
+            var vec = [aStride.points[0].minus(aStride.points[1]),
+                    aStride.points[0].minus(aStride.points[2]),
+                    bStride.points[0].minus(bStride.points[1]),
+                    bStride.points[0].minus(bStride.points[2])];
+            for (var i = 0; i < 4; ++i) {
+                if (check(vec[i], aStride.points, bStride.points) === false) {
+                    return false;
+                }
+            }
+            return true;
+        }
     },
     
     MAP_TYPES: {

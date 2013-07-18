@@ -7,10 +7,16 @@ function Agent(x, y, z, mesh, maxV) {
     this.s = this.mesh.position;
     
     this.maxV = maxV;
-    this.v = {
-        x: maxV,
-        z: 0
-    };
+    this.v = new Vec2();
+    this.stride = null;
+    this.strideMesh = new THREE.Mesh(new THREE.CubeGeometry(x, y, z),
+            new THREE.MeshLambertMaterial({
+                color: 0xff0000,
+                wireframe: true
+            })
+    );
+    this.strideMesh.position.set(this.s.x, this.s.y, this.s.z);
+    gb.scene.add(this.strideMesh);
     
     this.state = this.STATE.EXPLORING;
     
@@ -43,7 +49,9 @@ Agent.prototype = {
         EXIT: 5
     },
     
-    update: function() {
+    MAX_STRIDE: 0.5,
+    
+    updateV: function() {
         if (this.state === this.STATE.EXPLORING) {
             if (this.path === null) {
                 // compute path
@@ -57,32 +65,12 @@ Agent.prototype = {
                 // update v
                 if (step.x) {
                     this.v.x = step.x * this.maxV;
-                    this.v.z = 0;
+                    this.v.y = 0;
                 } else {
                     this.v.x = 0;
-                    this.v.z = step.y * this.maxV;
+                    this.v.y = step.y * this.maxV;
                 }
-                
-                // rotate agent
-                var alpha = (this.v.x === 0) ? Math.PI / 2
-                        : Math.atan(this.v.z / this.v.x);
-                this.mesh.rotation.y = alpha;
-                
-                // update s
-                this.s.x += this.v.x;
-                this.s.z += this.v.z;
-                
-                // check step
-                if ((step.x > 0 && this.s.x >= step.absX - 12) ||
-                        (step.x < 0 && this.s.x <= step.absX - 12) ||
-                        (step.y > 0 && this.s.z >= step.absY - 12) ||
-                        (step.y < 0 && this.s.z <= step.absY - 12)) {
-                    // move to next step
-                    ++this.path.current;
-                    this.attr.tiredness += Math.random() * 0.005;
-                    this.attr.hunger += Math.random() * 0.005;
-                    this.attr.thirst += Math.random() * 0.005;
-                }
+                this.updateStride(this.v.x, this.v.y);
             } else {
                 // end of path
                 if (this.state === this.STATE.EXIT) {
@@ -99,6 +87,24 @@ Agent.prototype = {
                 this.path = null;
             }
         }
+    },
+    
+    updateStride: function(vx, vy) {
+        var length = Math.sqrt(vx * vx + vy * vy) * 60;
+        var alpha = vx === 0 ? 0 : -Math.atan(vy / vx);
+        
+        this.stride = {
+            length: length,
+            points: [new Vec2(this.x / 2, -this.z / 2)
+                            .rotate(alpha).add(this.s.x, this.s.z),
+                    new Vec2(-this.x / 2, -this.z / 2)
+                            .rotate(alpha).add(this.s.x, this.s.z),
+                    new Vec2(this.x / 2, -this.z / 2 + length)
+                        .rotate(alpha).add(this.s.x, this.s.z),
+                    new Vec2(-this.x / 2, -this.z / 2 + length)
+                        .rotate(alpha).add(this.s.x, this.s.z)]
+        };
+        this.strideMesh.scale.x = length / this.x;
     },
     
     updateAttr: function(rigidAttr, price) {
@@ -218,6 +224,17 @@ Agent.prototype = {
             this.goAmuse();
         } else {
             this.goWander();
+        }
+    },
+    
+    distanceToNextStep: function() {
+        if (this.path && this.path.steps[this.path.current]) {
+            var step = this.path.steps[this.path.current];
+            var des = new Vec2(step.absX, step.absY);
+            var cur = new Vec2(this.s.x, this.s.z);
+            return des.minus(cur).modulus();
+        } else {
+            return Infinity;
         }
     }
 };
