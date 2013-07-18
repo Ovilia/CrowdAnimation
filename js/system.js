@@ -36,10 +36,10 @@ System.prototype = {
     agentHeightMax: 0.6,
     agentThickness: 0.15,
     groupMaxAgent: 6,
-    agentMaxV: 0.025,
-    agentMinV: 0.005,
+    agentMaxV: 0.015,
+    agentMinV: 0.0025,
     
-    stopSpeed: 0.0001,
+    stopSpeed: 0.001,
     
     entrance: null,
     
@@ -246,7 +246,8 @@ System.prototype = {
         
         // check stride
         for (var i = 0, len = this.agents.length; i < len; ++i) {
-            if (this.agents[i] && this.agents[i].path) {
+            if (this.agents[i] && this.agents[i].path
+                    && this.agents[i].strideSave === false) {
                 var a = this.agents[i];
                 var aStep = a.path.steps[a.path.current];
                 if (!aStep) {
@@ -255,24 +256,47 @@ System.prototype = {
                 
                 for (var j = i + 1, len = this.agents.length; j < len; ++j) {
                     var b = this.agents[j];
-                    if (!b || !b.path || !b.path.steps[b.path.current]) {
+                    if (!b || !b.path || !b.path.steps[b.path.current]
+                            || b.strideSave) {
                         continue;
                     }
+                    
+                    // rough detection
+                    var ab = new Vec2(a.s.x - b.s.x, a.s.z - b.s.z);
+                    if (ab.modulus() > (a.maxV + b.maxV) * a.STRIDE_RATIO) {
+                        continue;
+                    }
+                    
                     // check if stride collide
                     var decreaseI =
                             a.distanceToNextStep() > b.distanceToNextStep();
-                    while (strideCollide(a.stride, b.stride)
-                            && (a.v.modulus() > this.stopSpeed
-                            || b.v.modulus() > this.stopSpeed)) {
+                    var cnt = 0;
+                    while (strideCollide(a.stride, b.stride)) {
+                        ++cnt;
+                        if ((a.v.modulus() < this.stopSpeed
+                                && b.v.modulus() < this.stopSpeed)
+                                || (ab.modulus() < this.agentWidthMax)) {
+                            a.v = new Vec2(0, 0);
+                            b.v = new Vec2(ab.y, ab.x).normalize().scale(b.maxV);
+                            a.updateStride(a.v.x, a.v.y);
+                            b.updateStride(b.v.x, b.v.y);
+                            a.strideSave = true;
+                            a.strideSave = true;
+                            break;
+                        }
                         if (decreaseI) {
                             a.v.x = a.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
                             a.v.y = a.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
-                            a.v = a.v.rotate(Math.PI / 3);
+                            if (cnt < 8) {
+                                a.v = a.v.rotate(Math.PI / 4);
+                            }
                             a.updateStride(a.v.x, a.v.y);
                         } else {
                             b.v.x = b.v.x < this.stopSpeed ? 0 : b.v.x * 0.8;
                             b.v.y = b.v.y < this.stopSpeed ? 0 : b.v.y * 0.8;
-                            b.v = b.v.rotate(Math.PI / 3);
+                            if (cnt < 8) {
+                                b.v = b.v.rotate(Math.PI / 4);
+                            }
                             b.updateStride(b.v.x, b.v.y);
                         }
                         decreaseI = !decreaseI;

@@ -16,7 +16,8 @@ function Agent(x, y, z, mesh, maxV) {
             })
     );
     this.strideMesh.position.set(this.s.x, this.s.y, this.s.z);
-    gb.scene.add(this.strideMesh);
+    this.strideSave = false;
+    //gb.scene.add(this.strideMesh);
     
     this.state = this.STATE.EXPLORING;
     
@@ -51,7 +52,7 @@ Agent.prototype = {
     
     MAX_STRIDE: 0.5,
     
-    STRIDE_RATIO: 50,
+    STRIDE_RATIO: 100,
     
     updateV: function() {
         if (this.state === this.STATE.EXPLORING) {
@@ -70,6 +71,7 @@ Agent.prototype = {
                 var cur = new Vec2(this.s.x, this.s.z);
                 this.v = dest.minus(cur).normalize().scale(this.maxV);
                 
+                this.strideSave = false;
                 this.updateStride(this.v.x, this.v.y);
             } else {
                 // end of path
