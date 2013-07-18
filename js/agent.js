@@ -51,6 +51,8 @@ Agent.prototype = {
     
     MAX_STRIDE: 0.5,
     
+    STRIDE_RATIO: 50,
+    
     updateV: function() {
         if (this.state === this.STATE.EXPLORING) {
             if (this.path === null) {
@@ -63,13 +65,11 @@ Agent.prototype = {
             var step = this.path.steps[this.path.current];
             if (step) {
                 // update v
-                if (step.x) {
-                    this.v.x = step.x * this.maxV;
-                    this.v.y = 0;
-                } else {
-                    this.v.x = 0;
-                    this.v.y = step.y * this.maxV;
-                }
+                var dest = new Vec2(gb.system.getRoadPos(step.absX),
+                        gb.system.getRoadPos(step.absY));
+                var cur = new Vec2(this.s.x, this.s.z);
+                this.v = dest.minus(cur).normalize().scale(this.maxV);
+                
                 this.updateStride(this.v.x, this.v.y);
             } else {
                 // end of path
@@ -90,8 +90,17 @@ Agent.prototype = {
     },
     
     updateStride: function(vx, vy) {
-        var length = Math.sqrt(vx * vx + vy * vy) * 60;
-        var alpha = vx === 0 ? 0 : -Math.atan(vy / vx);
+        var length = Math.sqrt(vx * vx + vy * vy) * this.STRIDE_RATIO;
+        var alpha = 0;
+        if (vy === 0) {
+            if (vx > 0) {
+                alpha = Math.PI / 2;
+            } else {
+                alpha = -Math.PI / 2;
+            }
+        } else {
+            alpha = Math.atan(vx / vy);
+        }
         
         this.stride = {
             length: length,
@@ -104,7 +113,7 @@ Agent.prototype = {
                     new Vec2(-this.x / 2, -this.z / 2 + length)
                         .rotate(alpha).add(this.s.x, this.s.z)]
         };
-        this.strideMesh.scale.x = length / this.x;
+        this.strideMesh.scale.x = (length + this.x) / this.x;
     },
     
     updateAttr: function(rigidAttr, price) {

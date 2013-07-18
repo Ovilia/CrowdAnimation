@@ -233,7 +233,7 @@ System.prototype = {
     },
     
     getRoadPos: function(x) {
-        return x - 12.5;
+        return x - 12;
     },
     
     updateAgent: function() {
@@ -259,19 +259,23 @@ System.prototype = {
                         continue;
                     }
                     // check if stride collide
+                    var decreaseI =
+                            a.distanceToNextStep() > b.distanceToNextStep();
                     while (strideCollide(a.stride, b.stride)
                             && (a.v.modulus() > this.stopSpeed
                             || b.v.modulus() > this.stopSpeed)) {
-                        if (a.distanceToNextStep() > b.distanceToNextStep()) {
-                            // decrease v of the one farther from destination
+                        if (decreaseI) {
                             a.v.x = a.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
                             a.v.y = a.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
-                            console.log('decrease', i);
+                            a.v = a.v.rotate(Math.PI / 3);
+                            a.updateStride(a.v.x, a.v.y);
                         } else {
-                            b.v.x = b.v.x < this.stopSpeed ? 0 : a.v.x * 0.8;
-                            b.v.y = b.v.y < this.stopSpeed ? 0 : a.v.y * 0.8;
-                            console.log('decrease', j);
+                            b.v.x = b.v.x < this.stopSpeed ? 0 : b.v.x * 0.8;
+                            b.v.y = b.v.y < this.stopSpeed ? 0 : b.v.y * 0.8;
+                            b.v = b.v.rotate(Math.PI / 3);
+                            b.updateStride(b.v.x, b.v.y);
                         }
+                        decreaseI = !decreaseI;
                     }
                 }
             }
