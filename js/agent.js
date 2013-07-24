@@ -35,7 +35,7 @@ function Agent(x, y, z, mesh, maxV) {
         amusement: Math.random(),
         dizziness: Math.random()
     };
-    this.money = Math.ceil(Math.random() * 200);
+    this.money = Math.ceil(Math.random() * 150) + 20;
     
     this.findShopThreshold = 0.4 + Math.random() * 0.4;
     
